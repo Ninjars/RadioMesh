@@ -1,13 +1,76 @@
 package com.ninjarific.radiomesh;
 
-import android.support.v7.app.AppCompatActivity;
+import android.Manifest;
+import android.content.pm.PackageManager;
+import android.os.Build;
 import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.DividerItemDecoration;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
+import android.view.View;
+
+import com.ninjarific.radiomesh.database.RadioPoint;
+import com.ninjarific.radiomesh.ui.RadioResultsListAdapter;
+
+import io.realm.RealmResults;
+import timber.log.Timber;
 
 public class MainActivity extends AppCompatActivity {
+    private static final int PERMISSIONS_REQUEST_CODE_ACCESS_LOCATION = 666;
+    private RecyclerView recyclerView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        View scanButton = findViewById(R.id.fab);
+
+
+        scanButton.setOnClickListener(view -> {
+            if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.M
+                    && checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED){
+                    requestPermissions(new String[]{Manifest.permission.ACCESS_COARSE_LOCATION},
+                            PERMISSIONS_REQUEST_CODE_ACCESS_LOCATION);
+            } else {
+                MainApplication.getWifiScanner().triggerScan(view.getContext());
+            }
+        });
+        RealmResults<RadioPoint> radioPoints = MainApplication.getDatabase().getRadioPoints();
+        RadioResultsListAdapter adapter = new RadioResultsListAdapter(radioPoints);
+        recyclerView = (RecyclerView) findViewById(R.id.recycler_view);
+        recyclerView.setAdapter(adapter);
+        recyclerView.setHasFixedSize(true);
+        recyclerView.addItemDecoration(new DividerItemDecoration(this, DividerItemDecoration.VERTICAL));
+        recyclerView.setLayoutManager(new LinearLayoutManager(this));
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        Timber.i("onStart: registering scanner");
+        MainApplication.getWifiScanner().register(this);
+    }
+
+    @Override
+    protected void onStop() {
+        MainApplication.getWifiScanner().unregister(this);
+        Timber.i("onStop: unregistering scanner");
+        super.onStop();
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        recyclerView.setAdapter(null);
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        if (requestCode == PERMISSIONS_REQUEST_CODE_ACCESS_LOCATION
+                && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+            // Do something with granted permission
+            MainApplication.getWifiScanner().triggerScan(this);
+        }
     }
 }

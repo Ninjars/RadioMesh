@@ -1,14 +1,25 @@
 package com.ninjarific.radiomesh.database;
 
+import java.util.Objects;
+
 import io.realm.RealmList;
 import io.realm.RealmObject;
 import io.realm.annotations.PrimaryKey;
 
 public class RadioPoint extends RealmObject {
+    public static final String KEY_BSSID = "bssid";
+
     @PrimaryKey
     private String bssid;
     private String ssid;
     private RealmList<RadioPoint> connectedPoints;
+
+    public RadioPoint() {}
+
+    public RadioPoint(String bssid, String ssid) {
+        this.bssid = bssid;
+        this.ssid = ssid;
+    }
 
     public String getBssid() {
         return bssid;
@@ -23,7 +34,7 @@ public class RadioPoint extends RealmObject {
     }
 
     public void addConnection(RadioPoint point) {
-        if (doesNotHaveConnection(point)) {
+        if (!Objects.equals(point.bssid, bssid) && doesNotHaveConnection(point)) {
             connectedPoints.add(point);
         }
     }
