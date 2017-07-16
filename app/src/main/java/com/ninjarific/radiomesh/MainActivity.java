@@ -26,7 +26,6 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         View scanButton = findViewById(R.id.fab);
 
-
         scanButton.setOnClickListener(view -> {
             if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.M
                     && checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED){
@@ -36,6 +35,7 @@ public class MainActivity extends AppCompatActivity {
                 MainApplication.getWifiScanner().triggerScan(view.getContext());
             }
         });
+
         RealmResults<RadioPoint> radioPoints = MainApplication.getDatabase().getRadioPoints();
         RadioResultsListAdapter adapter = new RadioResultsListAdapter(radioPoints);
         recyclerView = (RecyclerView) findViewById(R.id.recycler_view);

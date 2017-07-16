@@ -13,23 +13,26 @@ public class RadioPointDatabase implements IDatabase {
     @Override
     public void registerScanResults(List<ScanResult> scanResults) {
         Timber.d("registerScanResults: " + scanResults.size());
-        Realm realm = Realm.getDefaultInstance();
-        List<RadioPoint> radioPoints = new ArrayList<>(scanResults.size());
-        realm.beginTransaction();
-        for (ScanResult result : scanResults) {
-            RadioPoint scannedRadioPoint = realm.where(RadioPoint.class).equalTo(RadioPoint.KEY_BSSID, result.BSSID).findFirst();
-            if (scannedRadioPoint == null) {
-                Timber.d(">>>> new point found " + result.BSSID);
-                scannedRadioPoint = new RadioPoint(result.BSSID, result.SSID);
-                scannedRadioPoint = realm.copyToRealm(scannedRadioPoint);
+        Realm realmInstance = Realm.getDefaultInstance();
+        realmInstance.executeTransactionAsync(realm -> {
+            Timber.d("> registerScanResults: async transaction executing");
+            List<RadioPoint> radioPoints = new ArrayList<>(scanResults.size());
+            for (ScanResult result : scanResults) {
+                RadioPoint scannedRadioPoint = realm.where(RadioPoint.class)
+                        .equalTo(RadioPoint.KEY_BSSID, result.BSSID)
+                        .findFirst();
+                if (scannedRadioPoint == null) {
+                    Timber.v(">>>> new point found " + result.BSSID);
+                    scannedRadioPoint = new RadioPoint(result.BSSID, result.SSID);
+                    scannedRadioPoint = realm.copyToRealm(scannedRadioPoint);
+                }
+                radioPoints.add(scannedRadioPoint);
             }
-            radioPoints.add(scannedRadioPoint);
-        }
-        for (RadioPoint point : radioPoints) {
-            radioPoints.forEach(point::addConnection);
-        }
-        realm.commitTransaction();
-        Timber.d(">> committed scan results");
+            for (RadioPoint point : radioPoints) {
+                radioPoints.forEach(point::addConnection);
+            }
+            Timber.d("> registerScanResults: async transaction completed");
+        });
     }
 
     public RealmResults<RadioPoint> getRadioPoints() {
