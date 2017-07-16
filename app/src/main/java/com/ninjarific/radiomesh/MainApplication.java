@@ -4,6 +4,7 @@ import android.app.Application;
 import android.widget.Toast;
 
 import com.ninjarific.radiomesh.database.RadioPointDatabase;
+import com.ninjarific.radiomesh.utils.ScanSchedulerUtil;
 
 import io.realm.Realm;
 import timber.log.Timber;
@@ -20,8 +21,10 @@ public class MainApplication extends Application implements IMessageHandler {
         Timber.plant(new Timber.DebugTree());
         Realm.init(this);
         database = new RadioPointDatabase();
-        wifiScanner = new WifiScanner(this, database, message -> Toast.makeText(this, message, Toast.LENGTH_SHORT)
-                .show());
+        wifiScanner = new WifiScanner(this, database, message
+                -> Toast.makeText(this, message, Toast.LENGTH_SHORT).show());
+        boolean scanJobStarted = ScanSchedulerUtil.scheduleScanJob(this);
+        Timber.d("scan job started? " + scanJobStarted);
     }
 
     public static WifiScanner getWifiScanner() {

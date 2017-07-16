@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.IntentFilter;
 import android.net.wifi.ScanResult;
 import android.net.wifi.WifiManager;
+import android.support.annotation.Nullable;
 
 import com.ninjarific.radiomesh.database.IDatabase;
 
@@ -20,6 +21,8 @@ public class WifiScanner {
     private final IDatabase database;
 
     private ScanState scanState = ScanState.IDLE;
+    @Nullable
+    private Runnable scanFinishedCallback;
 
     private enum ScanState {
         IDLE,
@@ -65,6 +68,15 @@ public class WifiScanner {
         }
     }
 
+    public void triggerBackgroundScan(Context applicationContext, Runnable scanFinishedCallback) {
+        this.scanFinishedCallback = scanFinishedCallback;
+        triggerScan(applicationContext);
+    }
+
+    public void clearBackgroundScan() {
+        scanFinishedCallback = null;
+    }
+
     private void enableWifi(Context context) {
         if (!wifiManager.isWifiEnabled()) {
             Timber.i("Enabling WiFi");
@@ -93,14 +105,15 @@ public class WifiScanner {
                 onWifiReadyForScan();
                 break;
         }
-
     }
 
     private void onScanResults(List<ScanResult> scanResults) {
         if (scanState == ScanState.SCANNING) {
             Timber.i("onScanResults() count " + scanResults.size());
             scanState = ScanState.IDLE;
-            database.registerScanResults(scanResults);
+            Runnable callback = scanFinishedCallback;
+            scanFinishedCallback = null;
+            database.registerScanResults(scanResults, callback);
 
         } else {
             Timber.i("ignoring system scan");
