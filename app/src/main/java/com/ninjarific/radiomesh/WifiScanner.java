@@ -47,7 +47,11 @@ public class WifiScanner {
     }
 
     public void unregister(Context context) {
-        context.unregisterReceiver(broadCastReceiver);
+        try {
+            context.unregisterReceiver(broadCastReceiver);
+        } catch (IllegalArgumentException e) {
+            e.printStackTrace();
+        }
     }
 
     public void triggerScan(Context context) {

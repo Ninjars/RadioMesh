@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">RadioMesh</string>
+    <string name="background_scan">Autoscan</string>
 </resources>

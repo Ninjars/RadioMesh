@@ -1,17 +1,22 @@
 package com.ninjarific.radiomesh;
 
 import android.Manifest;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.DividerItemDecoration;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.support.v7.widget.SwitchCompat;
+import android.support.v7.widget.Toolbar;
 import android.view.View;
 
 import com.ninjarific.radiomesh.database.RadioPoint;
 import com.ninjarific.radiomesh.ui.RadioResultsListAdapter;
+import com.ninjarific.radiomesh.utils.ScanSchedulerUtil;
 
 import io.realm.RealmResults;
 import timber.log.Timber;
@@ -24,13 +29,27 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
+
+        SwitchCompat toggleButton = (SwitchCompat) findViewById(R.id.button_background_scan);
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+        toggleButton.setChecked(sharedPreferences.getBoolean(MainApplication.PREF_BACKGROUND_SCAN, false));
+        toggleButton.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            sharedPreferences.edit()
+                    .putBoolean(MainApplication.PREF_BACKGROUND_SCAN, isChecked)
+                    .apply();
+            setBackgroundScanState(isChecked);
+        });
+
         View scanButton = findViewById(R.id.fab);
 
         scanButton.setOnClickListener(view -> {
-            if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.M
-                    && checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED){
-                    requestPermissions(new String[]{Manifest.permission.ACCESS_COARSE_LOCATION},
-                            PERMISSIONS_REQUEST_CODE_ACCESS_LOCATION);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M
+                    && checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                requestPermissions(new String[]{Manifest.permission.ACCESS_COARSE_LOCATION},
+                        PERMISSIONS_REQUEST_CODE_ACCESS_LOCATION);
             } else {
                 MainApplication.getWifiScanner().triggerScan(view.getContext());
             }
@@ -43,6 +62,14 @@ public class MainActivity extends AppCompatActivity {
         recyclerView.setHasFixedSize(true);
         recyclerView.addItemDecoration(new DividerItemDecoration(this, DividerItemDecoration.VERTICAL));
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
+    }
+
+    private void setBackgroundScanState(boolean enabled) {
+        if (enabled) {
+            ScanSchedulerUtil.scheduleScanJob(getApplicationContext());
+        } else {
+            ScanSchedulerUtil.cancelScanJob(getApplicationContext());
+        }
     }
 
     @Override
