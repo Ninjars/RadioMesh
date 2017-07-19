@@ -1,4 +1,4 @@
-package com.ninjarific.radiomesh;
+package com.ninjarific.radiomesh.ui.resultslist;
 
 import android.Manifest;
 import android.content.SharedPreferences;
@@ -14,14 +14,15 @@ import android.support.v7.widget.SwitchCompat;
 import android.support.v7.widget.Toolbar;
 import android.view.View;
 
+import com.ninjarific.radiomesh.MainApplication;
+import com.ninjarific.radiomesh.R;
 import com.ninjarific.radiomesh.database.RadioPoint;
-import com.ninjarific.radiomesh.ui.RadioResultsListAdapter;
 import com.ninjarific.radiomesh.utils.ScanSchedulerUtil;
 
 import io.realm.RealmResults;
 import timber.log.Timber;
 
-public class MainActivity extends AppCompatActivity {
+public class ResultsListActivity extends AppCompatActivity {
     private static final int PERMISSIONS_REQUEST_CODE_ACCESS_LOCATION = 666;
     private RecyclerView recyclerView;
 

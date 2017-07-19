@@ -1,4 +1,4 @@
-package com.ninjarific.radiomesh.ui;
+package com.ninjarific.radiomesh.ui.resultslist;
 
 import android.support.annotation.Nullable;
 import android.support.v7.widget.RecyclerView;
