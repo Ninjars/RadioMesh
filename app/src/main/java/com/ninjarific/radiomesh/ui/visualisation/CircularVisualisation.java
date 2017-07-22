@@ -1,13 +1,12 @@
 package com.ninjarific.radiomesh.ui.visualisation;
 
 import android.content.Context;
+import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Point;
 import android.graphics.PointF;
-import android.graphics.PorterDuff;
-import android.graphics.PorterDuffXfermode;
 import android.support.annotation.Nullable;
 import android.util.AttributeSet;
 import android.view.View;
@@ -20,18 +19,23 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
+import io.realm.Realm;
+import io.realm.RealmResults;
+import timber.log.Timber;
+
 
 public class CircularVisualisation extends View {
 
     private static final float CIRCLE_RADIUS = 10f;
 
     private List<RadioPoint> dataset;
-    private Map<RadioPoint, PointF> positionedData;
     private Map<RadioPoint, PointF> pendingPositionedData;
     private Paint radioPaint;
     private Paint linePaint;
+    private Paint bitmapPaint;
     private Point center = new Point(0,0);
     private float radius;
+    private Bitmap bitmap;
 
     public CircularVisualisation(Context context, @Nullable AttributeSet attrs) {
         super(context, attrs);
@@ -45,16 +49,17 @@ public class CircularVisualisation extends View {
 
     private void init() {
         radioPaint = new Paint();
-        radioPaint.setARGB(100, 100, 100, 100);
+        radioPaint.setARGB(150, 100, 100, 100);
         radioPaint.setStyle(Paint.Style.FILL);
 
         linePaint = new Paint();
         linePaint.setColor(Color.LTGRAY);
         linePaint.setStyle(Paint.Style.STROKE);
         linePaint.setStrokeWidth(1);
-        linePaint.setARGB(20, 179, 180, 181);
-        linePaint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.DARKEN));
+        linePaint.setARGB(255, 179, 180, 181);
         linePaint.setAntiAlias(true);
+
+        bitmapPaint = new Paint();
     }
 
     @Override
@@ -120,23 +125,52 @@ public class CircularVisualisation extends View {
     @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
-        canvas.drawColor(Color.argb(255, 71, 71, 71), PorterDuff.Mode.CLEAR);
-        checkForPendingDatasetUpdate();
+        checkForPendingUpdate();
+        if (bitmap != null && !bitmap.isRecycled()) {
+            canvas.drawBitmap(bitmap, 0, 0, bitmapPaint);
+        }
+    }
+
+    private void checkForPendingUpdate() {
+        if (pendingPositionedData != null) {
+            Map<RadioPoint, PointF> positionedData = pendingPositionedData;
+            pendingPositionedData = null;
+
+            int targetWidth = center.x * 2;
+            int targetHeight = center.y * 2;
+            if (bitmap != null && bitmap.getWidth() == targetWidth && bitmap.getHeight() == targetHeight) {
+                Timber.i("reusing bitmap");
+                bitmap = Bitmap.createBitmap(bitmap, 0, 0, targetWidth, targetHeight);
+            } else {
+                Timber.i("creating new bitmap");
+                if (bitmap != null) {
+                    bitmap.recycle();
+                    bitmap = null;
+                }
+                bitmap = Bitmap.createBitmap(targetWidth, targetHeight, Bitmap.Config.ARGB_8888);
+            }
+            drawVisualisation(positionedData, dataset, radioPaint, linePaint, CIRCLE_RADIUS, new Canvas(bitmap));
+        }
+    }
+
+    private static void drawVisualisation(Map<RadioPoint, PointF> positionedData,
+                                    List<RadioPoint> dataset,
+                                    Paint radioPaint, Paint linePaint, float radius, Canvas canvas) {
+        canvas.drawColor(Color.argb(255, 71, 71, 71));
+        Realm realm = Realm.getDefaultInstance();
+        RealmResults<RadioPoint> radioPoints = realm.where(RadioPoint.class).findAll();
+        linePaint.setAlpha((int)(10 + 245/Math.sqrt(dataset.size()/2)));
+        Timber.i("setting alpha to " + (int)(10 + 245/Math.sqrt(dataset.size()/2)));
         for (RadioPoint radio : dataset) {
-            PointF point = positionedData.get(radio);
-            canvas.drawCircle(point.x, point.y, CIRCLE_RADIUS, radioPaint);
-            for (RadioPoint connectedPoint : radio.getConnectedPoints()) {
+            RadioPoint backgroundThreadRadio
+                    = radioPoints.where().equalTo(RadioPoint.KEY_BSSID, radio.getBssid()).findFirst();
+            PointF point = positionedData.get(backgroundThreadRadio);
+            canvas.drawCircle(point.x, point.y, radius, radioPaint);
+            for (RadioPoint connectedPoint : backgroundThreadRadio.getConnectedPoints()) {
                 PointF targetPoint = positionedData.get(connectedPoint);
                 if (targetPoint == null) continue;
                 canvas.drawLine(point.x, point.y, targetPoint.x, targetPoint.y, linePaint);
             }
-        }
-    }
-
-    private void checkForPendingDatasetUpdate() {
-        if (pendingPositionedData != null) {
-            positionedData = pendingPositionedData;
-            pendingPositionedData = null;
         }
     }
 }
