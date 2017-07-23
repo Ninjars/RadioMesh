@@ -11,9 +11,14 @@ import com.ninjarific.radiomesh.database.RadioPoint;
 import java.util.Collections;
 import java.util.List;
 
-public class VisualsAdapter extends RecyclerView.Adapter {
+class VisualsAdapter extends RecyclerView.Adapter {
 
+    private final IOnEntryClickListener listener;
     private List<List<RadioPoint>> dataset = Collections.emptyList();
+
+    VisualsAdapter(IOnEntryClickListener listener) {
+        this.listener = listener;
+    }
 
     public void setData(List<List<RadioPoint>> dataset) {
         this.dataset = dataset;
@@ -29,8 +34,9 @@ public class VisualsAdapter extends RecyclerView.Adapter {
             visualsView = (CircularVisualisation) itemView;
         }
 
-        public void setData(List<RadioPoint> data) {
+        void setData(List<RadioPoint> data, View.OnClickListener listener) {
             visualsView.setDataset(data);
+            itemView.setOnClickListener(listener);
         }
     }
 
@@ -42,7 +48,7 @@ public class VisualsAdapter extends RecyclerView.Adapter {
 
     @Override
     public void onBindViewHolder(RecyclerView.ViewHolder holder, int position) {
-        ((VisualsHolder) holder).setData(dataset.get(position));
+        ((VisualsHolder) holder).setData(dataset.get(position), view -> listener.onVisualsItemClick(position));
     }
 
     @Override

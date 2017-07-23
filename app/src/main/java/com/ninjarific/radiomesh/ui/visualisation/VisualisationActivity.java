@@ -9,6 +9,8 @@ import com.ninjarific.radiomesh.MainApplication;
 import com.ninjarific.radiomesh.R;
 import com.ninjarific.radiomesh.database.RadioPointDatabase;
 
+import timber.log.Timber;
+
 
 public class VisualisationActivity extends AppCompatActivity {
 
@@ -23,7 +25,7 @@ public class VisualisationActivity extends AppCompatActivity {
 
         RecyclerView visualsListView = (RecyclerView) findViewById(R.id.visuals_list_view);
         visualsListView.setLayoutManager(new LinearLayoutManager(visualsListView.getContext()));
-        adapter = new VisualsAdapter();
+        adapter = new VisualsAdapter(position -> Timber.i("clicked on item " + position));
         visualsListView.setAdapter(adapter);
 
         listener = newDataset -> adapter.setData(newDataset);
