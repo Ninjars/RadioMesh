@@ -59,7 +59,8 @@ public class RadioPointDatabase implements IDatabase {
         listeners.add(listener);
         if (groupedRadioPoints == null && listeners.size() == 1) {
             beginCachingGroupedRadioPoints();
-        } else if (groupedRadioPoints != null) {
+        }
+        if (groupedRadioPoints != null) {
             listener.onDataSetUpdate(groupedRadioPoints);
         }
     }
