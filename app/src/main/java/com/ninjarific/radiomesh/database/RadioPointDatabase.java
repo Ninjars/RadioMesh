@@ -4,6 +4,8 @@ import android.net.wifi.ScanResult;
 import android.support.annotation.Nullable;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 
 import io.realm.Realm;
@@ -11,6 +13,10 @@ import io.realm.RealmResults;
 import timber.log.Timber;
 
 public class RadioPointDatabase implements IDatabase {
+
+    private final List<RadioPointsUpdateListener> listeners = new ArrayList<>();
+    private List<List<RadioPoint>> groupedRadioPoints;
+
     @Override
     public void registerScanResults(List<ScanResult> scanResults, @Nullable Runnable scanFinishedCallback) {
         Timber.d("registerScanResults: " + scanResults.size());
@@ -43,5 +49,57 @@ public class RadioPointDatabase implements IDatabase {
     public RealmResults<RadioPoint> getRadioPoints() {
         Realm realm = Realm.getDefaultInstance();
         return realm.where(RadioPoint.class).findAllSorted(RadioPoint.KEY_BSSID);
+    }
+
+    public interface RadioPointsUpdateListener {
+        void onDataSetUpdate(List<List<RadioPoint>> newDataset);
+    }
+
+    public void registerGroupedRadioPointsListener(RadioPointsUpdateListener listener) {
+        listeners.add(listener);
+        if (groupedRadioPoints == null && listeners.size() == 1) {
+            beginCachingGroupedRadioPoints();
+        } else if (groupedRadioPoints != null) {
+            listener.onDataSetUpdate(groupedRadioPoints);
+        }
+    }
+
+    public void unregisterGroupedRadioPointsListener(RadioPointsUpdateListener listener) {
+        listeners.remove(listener);
+    }
+
+    private void beginCachingGroupedRadioPoints() {
+        Realm realm = Realm.getDefaultInstance();
+        RealmResults<RadioPoint> query = realm.where(RadioPoint.class).findAllSortedAsync(RadioPoint.KEY_BSSID);
+        query.addChangeListener(radioPointList -> {
+            groupedRadioPoints = groupData(radioPointList);
+            for (RadioPointsUpdateListener listener : listeners) {
+                listener.onDataSetUpdate(groupedRadioPoints);
+            }
+        });
+    }
+
+    private List<List<RadioPoint>> groupData(List<RadioPoint> dataset) {
+        List<RadioPoint> parsedPoints = new ArrayList<>(dataset.size());
+        List<List<RadioPoint>> datapoints = new ArrayList<>();
+
+        for (RadioPoint point : dataset) {
+            if (parsedPoints.contains(point)) continue;
+            HashSet<RadioPoint> currentSet = new HashSet<>(dataset.size()/4);
+            addConnectedNodesRecursive(point, currentSet);
+            parsedPoints.addAll(currentSet);
+            datapoints.add(new ArrayList<>(currentSet));
+        }
+        Collections.sort(datapoints, (lhs, rhs) -> Integer.compare(lhs.size(), rhs.size()));
+        return datapoints;
+    }
+
+    private void addConnectedNodesRecursive(RadioPoint point, HashSet<RadioPoint> currentSet) {
+        currentSet.add(point);
+        for (RadioPoint connected : point.getConnectedPoints()) {
+            if (!currentSet.contains(connected)) {
+                addConnectedNodesRecursive(connected, currentSet);
+            }
+        }
     }
 }
