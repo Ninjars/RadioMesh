@@ -23,7 +23,7 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".ui.clusters.ClusteredPointsActivity"/>
+        <activity android:name=".ui.clusters.ForceDirectedActivity"/>
         <service android:name=".ScanService"
                  android:label="Scan Service"
                  android:permission="android.permission.BIND_JOB_SERVICE"/>

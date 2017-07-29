@@ -9,7 +9,7 @@ import android.support.v7.widget.RecyclerView;
 import com.ninjarific.radiomesh.MainApplication;
 import com.ninjarific.radiomesh.R;
 import com.ninjarific.radiomesh.database.RadioPointDatabase;
-import com.ninjarific.radiomesh.ui.clusters.ClusteredPointsActivity;
+import com.ninjarific.radiomesh.ui.clusters.ForceDirectedActivity;
 
 
 public class VisualisationActivity extends AppCompatActivity {
@@ -26,9 +26,9 @@ public class VisualisationActivity extends AppCompatActivity {
         RecyclerView visualsListView = (RecyclerView) findViewById(R.id.visuals_list_view);
         visualsListView.setLayoutManager(new LinearLayoutManager(visualsListView.getContext()));
         adapter = new VisualsAdapter(position -> {
-            Intent intent = new Intent(this, ClusteredPointsActivity.class);
+            Intent intent = new Intent(this, ForceDirectedActivity.class);
             Bundle extras = new Bundle();
-            extras.putInt(ClusteredPointsActivity.BUNDLE_INDEX, position);
+            extras.putInt(ForceDirectedActivity.BUNDLE_INDEX, position);
             intent.putExtras(extras);
             this.startActivity(intent);
         });

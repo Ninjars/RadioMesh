@@ -9,7 +9,7 @@ import com.ninjarific.radiomesh.R;
 import com.ninjarific.radiomesh.database.RadioPointDatabase;
 
 
-public class ClusteredPointsActivity extends AppCompatActivity {
+public class ForceDirectedActivity extends AppCompatActivity {
 
     public static final String BUNDLE_INDEX = "positioned_data_index";
 
@@ -19,7 +19,7 @@ public class ClusteredPointsActivity extends AppCompatActivity {
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_clusters);
-        ClusteredPointsView view = (ClusteredPointsView) findViewById(R.id.clusters_view);
+        ForceDirectedView view = (ForceDirectedView) findViewById(R.id.clusters_view);
         final int index = getIntent().getExtras().getInt(BUNDLE_INDEX);
         listener = newDataset -> view.setData(newDataset.get(index));
     }
