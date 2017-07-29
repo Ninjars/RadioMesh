@@ -14,13 +14,10 @@ import android.view.View;
 import com.ninjarific.radiomesh.database.RadioPoint;
 
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
-import java.util.Map;
 
-import io.realm.Realm;
-import io.realm.RealmResults;
 import timber.log.Timber;
 
 
@@ -28,14 +25,19 @@ public class CircularVisualisation extends View {
 
     private static final float CIRCLE_RADIUS = 10f;
 
-    private List<RadioPoint> dataset;
-    private Map<RadioPoint, PointF> pendingPositionedData;
+    private final List<OrderedNode<RadioPoint>> orderedNodes = new ArrayList<>();
+    private final List<OrderedNode<RadioPoint>> nodes = new ArrayList<>();
+
+    private boolean pendingUpdate;
     private Paint radioPaint;
     private Paint linePaint;
     private Paint bitmapPaint;
     private Point center = new Point(0,0);
     private float radius;
+
     private Bitmap bitmap;
+
+    private final Comparator<OrderedNode> comparator = (a, b) -> Float.compare(a.getAverage(), b.getAverage());
 
     public CircularVisualisation(Context context, @Nullable AttributeSet attrs) {
         super(context, attrs);
@@ -53,10 +55,10 @@ public class CircularVisualisation extends View {
         radioPaint.setStyle(Paint.Style.FILL);
 
         linePaint = new Paint();
-        linePaint.setColor(Color.LTGRAY);
+        linePaint.setColor(Color.WHITE);
         linePaint.setStyle(Paint.Style.STROKE);
         linePaint.setStrokeWidth(1);
-        linePaint.setARGB(255, 179, 180, 181);
+        linePaint.setAlpha(200);
         linePaint.setAntiAlias(true);
 
         bitmapPaint = new Paint();
@@ -71,47 +73,64 @@ public class CircularVisualisation extends View {
     }
 
     public void setDataset(List<RadioPoint> dataset) {
-        this.dataset = groupData(dataset);
+        nodes.clear();
+        orderedNodes.clear();
+
+        for (int i = 0; i < dataset.size(); i++) {
+            RadioPoint node = dataset.get(i);
+            List<Integer> neighbours = new ArrayList<>();
+            for (RadioPoint neighbour : node.getConnectedPoints()) {
+                neighbours.add(dataset.indexOf(neighbour));
+            }
+            nodes.add(new OrderedNode<>(node, i, neighbours));
+        }
+
+        orderedNodes.addAll(nodes);
+
+        for (int i = 0; i < 3; i++) {
+            performSortingPass();
+        }
+
         updateDisplayIfReady();
     }
 
-    private List<RadioPoint> groupData(List<RadioPoint> dataset) {
-        List<RadioPoint> datapoints = new ArrayList<>(dataset.size());
-
-        for (RadioPoint point : dataset) {
-            if (datapoints.contains(point)) continue;
-            HashSet<RadioPoint> currentSet = new HashSet<>(dataset.size()/4);
-            addConnectedNodesRecursive(point, currentSet);
-            datapoints.addAll(currentSet);
-        }
-
-        return datapoints;
-    }
-
-    private void addConnectedNodesRecursive(RadioPoint point, HashSet<RadioPoint> currentSet) {
-        currentSet.add(point);
-        for (RadioPoint connected : point.getConnectedPoints()) {
-            if (!currentSet.contains(connected)) {
-                addConnectedNodesRecursive(connected, currentSet);
+    /**
+     * lazily updates positions of nodes and caches results
+     * @param i index of node in dataset
+     * @return position of queried index in ordered list
+     */
+    private int getOrderedPositionOfNode(int i) {
+        // look to see if cached value is valid
+        if (orderedNodes.get(nodes.get(i).getPosition()).getIndex() != i) {
+            // cache invalid; update all cached values
+            for (int j = 0; j < nodes.size(); j++) {
+                nodes.get(orderedNodes.get(j).getIndex()).setPosition(j);
             }
         }
+        return nodes.get(i).getPosition();
+    }
+
+    private void performSortingPass() {
+        for (int index = 0; index < nodes.size(); index++) {
+            OrderedNode<RadioPoint> nodeI = nodes.get(index);
+            int pos1 = getOrderedPositionOfNode(index);
+            int sum = pos1;
+            List<Integer> neighbours = nodeI.getNeighbours();
+            for (int j = 0; j <neighbours.size(); j++) {
+                int neighbourIndex = neighbours.get(j);
+                int pos2 = getOrderedPositionOfNode(neighbourIndex);
+                sum += pos2;
+                orderedNodes.get(pos1).setAverage(sum / (nodeI.getNeighbours().size() + 1f));
+            }
+        }
+        Collections.sort(orderedNodes, comparator);
     }
 
     private void updateDisplayIfReady() {
-        if (dataset != null && radius > 0) {
-            pendingPositionedData = calculatePositions(dataset, center, radius);
+        if (orderedNodes != null && radius > 0) {
+            pendingUpdate = true;
             invalidate();
         }
-    }
-
-    private static Map<RadioPoint, PointF> calculatePositions(List<RadioPoint> dataset, Point center, float radius) {
-        Map<RadioPoint, PointF> positionedData = new HashMap<>(dataset.size());
-        for (int i = 0; i < dataset.size(); i++) {
-            RadioPoint dataPoint = dataset.get(i);
-            PointF point = calculatePoint(i, dataset.size(), center, radius);
-            positionedData.put(dataPoint, point);
-        }
-        return positionedData;
     }
 
     private static PointF calculatePoint(int position, int totalPositions, Point center, float radius) {
@@ -132,9 +151,8 @@ public class CircularVisualisation extends View {
     }
 
     private void checkForPendingUpdate() {
-        if (pendingPositionedData != null) {
-            Map<RadioPoint, PointF> positionedData = pendingPositionedData;
-            pendingPositionedData = null;
+        if (pendingUpdate) {
+            pendingUpdate = false;
 
             int targetWidth = center.x * 2;
             int targetHeight = center.y * 2;
@@ -149,27 +167,29 @@ public class CircularVisualisation extends View {
                 }
                 bitmap = Bitmap.createBitmap(targetWidth, targetHeight, Bitmap.Config.ARGB_8888);
             }
-            drawVisualisation(positionedData, dataset, radioPaint, linePaint, CIRCLE_RADIUS, new Canvas(bitmap));
+            drawVisualisation(orderedNodes, nodes, radioPaint, linePaint, center, radius, CIRCLE_RADIUS, new Canvas
+                    (bitmap));
         }
     }
 
-    private static void drawVisualisation(Map<RadioPoint, PointF> positionedData,
-                                    List<RadioPoint> dataset,
-                                    Paint radioPaint, Paint linePaint, float radius, Canvas canvas) {
-        canvas.drawColor(Color.argb(255, 71, 71, 71));
-        Realm realm = Realm.getDefaultInstance();
-        RealmResults<RadioPoint> radioPoints = realm.where(RadioPoint.class).findAll();
-        linePaint.setAlpha((int)(10 + 245/Math.sqrt(dataset.size()/2)));
+    private static void drawVisualisation(List<OrderedNode<RadioPoint>> orderedNodes,
+                                    List<OrderedNode<RadioPoint>> dataset,
+                                    Paint radioPaint, Paint linePaint, Point center, float viewRadius, float radius,
+                                          Canvas canvas) {
+        canvas.drawColor(Color.argb(255, 31, 31, 31));
         Timber.i("setting alpha to " + (int)(10 + 245/Math.sqrt(dataset.size()/2)));
-        for (RadioPoint radio : dataset) {
-            RadioPoint backgroundThreadRadio
-                    = radioPoints.where().equalTo(RadioPoint.KEY_BSSID, radio.getBssid()).findFirst();
-            PointF point = positionedData.get(backgroundThreadRadio);
-            canvas.drawCircle(point.x, point.y, radius, radioPaint);
-            for (RadioPoint connectedPoint : backgroundThreadRadio.getConnectedPoints()) {
-                PointF targetPoint = positionedData.get(connectedPoint);
-                if (targetPoint == null) continue;
-                canvas.drawLine(point.x, point.y, targetPoint.x, targetPoint.y, linePaint);
+
+        List<PointF> nodePositions = new ArrayList<>();
+        for (OrderedNode node : dataset) {
+            nodePositions.add(calculatePoint(node.getPosition(), dataset.size(), center, viewRadius));
+        }
+
+        for (OrderedNode<RadioPoint> node : orderedNodes) {
+            PointF a = nodePositions.get(node.getIndex());
+            canvas.drawCircle(a.x, a.y, radius, radioPaint);
+            for (int neighbourIndex : node.getNeighbours()) {
+                PointF b = nodePositions.get(neighbourIndex);
+                canvas.drawLine(a.x, a.y, b.x, b.y, linePaint);
             }
         }
     }
