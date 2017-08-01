@@ -87,7 +87,7 @@ public class CircularVisualisation extends View {
 
         orderedNodes.addAll(nodes);
 
-        for (int i = 0; i < 3; i++) {
+        for (int i = 0; i < nodes.size() * 3; i++) {
             performSortingPass();
         }
 
