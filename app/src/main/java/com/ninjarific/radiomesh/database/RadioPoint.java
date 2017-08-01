@@ -42,4 +42,14 @@ public class RadioPoint extends RealmObject {
     private boolean doesNotHaveConnection(RadioPoint point) {
         return connectedPoints.where().equalTo("bssid", point.bssid).findFirst() == null;
     }
+
+    @Override
+    public boolean equals(Object obj) {
+        return obj != null && obj.getClass().equals(this.getClass()) && ((RadioPoint)obj).bssid.equals(bssid);
+    }
+
+    @Override
+    public int hashCode() {
+        return 11 * bssid.hashCode();
+    }
 }
