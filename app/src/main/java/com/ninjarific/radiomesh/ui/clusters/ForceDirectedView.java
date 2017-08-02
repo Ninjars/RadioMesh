@@ -98,17 +98,14 @@ public class ForceDirectedView extends SurfaceView implements Runnable {
                 double dx = neighbour.getX() - node.getX();
                 double dy = neighbour.getY() - node.getY();
                 double distance = Math.sqrt(dx*dx + dy*dy);
-
-                double force = distance == 0 ? 0 : SPRING_FACTOR * Math.log((distance) / SPRING_DIVISOR);
-                double angle = dx == 0 ? 0 : Math.atan(dy/dx);
-                double fx = force * Math.cos(angle);
-                double fy = force * Math.sin(angle);
-                if (Double.isNaN(force) || Double.isNaN(fx)) {
-                    throw new RuntimeException("NaN encountered in neighbours! angle " + angle + " from " + dx + ", " + dy
-                            + " distance " + distance + " force " + force
-                            + " at positions " + node.getX() + ", " + node.getY()
-                            + " : " + neighbour.getX() + ", " + neighbour.getY());
+                if (distance == 0) {
+                    continue;
                 }
+
+                double force = SPRING_FACTOR * Math.log(distance / SPRING_DIVISOR);
+                double scaleFactor = Math.min(5, force / distance);
+                double fx = scaleFactor * dx;
+                double fy = scaleFactor * dy;
                 node.addForce(fx, fy);
             }
             for (int i = 0; i < dataset.size(); i++) {
@@ -122,16 +119,13 @@ public class ForceDirectedView extends SurfaceView implements Runnable {
                 double dx = otherNode.getX() - node.getX();
                 double dy = otherNode.getY() - node.getY();
                 double distanceSquared = dx*dx + dy*dy;
-                double force = distanceSquared == 0 ? 0 : REPEL_FACTOR / distanceSquared;
-                double angle = dx == 0 ? 0 : Math.atan(dy/dx);
-                double fx = force * Math.cos(angle);
-                double fy = force * Math.sin(angle);
-                if (Double.isNaN(force) || Double.isNaN(fx)) {
-                    throw new RuntimeException("NaN encountered in neighbours! angle " + angle + " from " + dx + ", " + dy
-                            + " distanceSquared " + distanceSquared + " force " + force
-                            + " at positions " + node.getX() + ", " + node.getY()
-                            + " : " + otherNode.getX() + ", " + otherNode.getY());
+                if (distanceSquared == 0) {
+                    continue;
                 }
+                double force = REPEL_FACTOR / distanceSquared;
+                double scaleFactor = Math.min(5, force / Math.sqrt(distanceSquared));
+                double fx = scaleFactor * dx;
+                double fy = scaleFactor * dy;
                 node.addForce(fx, fy);
             }
         }
@@ -152,7 +146,7 @@ public class ForceDirectedView extends SurfaceView implements Runnable {
             Timber.d("drawing at " + x + ", " + y);
             for (int neighbourIndex : node.getNeighbours()) {
                 ForceConnectedNode b = dataset.get(neighbourIndex);
-                canvas.drawLine(x, y, b.getX() * viewWidth, b.getY() * viewHeight * yScale, linePaint);
+                canvas.drawLine(x, y, b.getX() * viewWidth, b.getY() * viewHeight, linePaint);
             }
         }
     }
