@@ -19,10 +19,10 @@ public class ForceDirectedView extends SurfaceView implements Runnable {
     private static final int FRAME_PERIOD = 1000 / MAX_FPS; // the frame period
     private static final float CIRCLE_RADIUS = 10f;
 
-    private static final double SPRING_LENGTH = 0.01;
-    private static final double SPRING_FACTOR = 2;
-    private static final double SPRING_DIVISOR = 0.05;
-    private static final double REPEL_FACTOR = 0.2;
+    private static final double SPRING_LENGTH = 0.1;
+    private static final double SPRING_FACTOR = 1;
+    private static final double SPRING_DIVISOR = 0.1;
+    private static final double REPEL_FACTOR = 0.5;
     private static final double FORCE_FACTOR = 0.1;
 
     private boolean isRunning = false;
@@ -124,8 +124,8 @@ public class ForceDirectedView extends SurfaceView implements Runnable {
                 }
                 double force = REPEL_FACTOR / distanceSquared;
                 double scaleFactor = Math.min(5, force / Math.sqrt(distanceSquared));
-                double fx = scaleFactor * dx;
-                double fy = scaleFactor * dy;
+                double fx = -scaleFactor * dx;
+                double fy = -scaleFactor * dy;
                 node.addForce(fx, fy);
             }
         }
@@ -143,7 +143,6 @@ public class ForceDirectedView extends SurfaceView implements Runnable {
             float x = node.getX() * viewWidth;
             float y = node.getY() * viewHeight;
             canvas.drawCircle(x, y, nodeRadius, radioPaint);
-            Timber.d("drawing at " + x + ", " + y);
             for (int neighbourIndex : node.getNeighbours()) {
                 ForceConnectedNode b = dataset.get(neighbourIndex);
                 canvas.drawLine(x, y, b.getX() * viewWidth, b.getY() * viewHeight, linePaint);
