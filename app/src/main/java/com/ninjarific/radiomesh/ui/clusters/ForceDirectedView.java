@@ -17,8 +17,7 @@ import timber.log.Timber;
 public class ForceDirectedView extends SurfaceView implements Runnable {
     private static final int MAX_FPS = 40; //desired fps
     private static final int FRAME_PERIOD = 1000 / MAX_FPS; // the frame period
-    private static final float CIRCLE_RADIUS = 10f;
-
+    private static final float CIRCLE_RADIUS = 8f;
     private static final double SPRING_LENGTH = 0.1;
     private static final double SPRING_FACTOR = 1;
     private static final double SPRING_DIVISOR = 0.1;
@@ -49,14 +48,13 @@ public class ForceDirectedView extends SurfaceView implements Runnable {
 
     private void init() {
         pointPaint = new Paint();
-        pointPaint.setARGB(150, 100, 100, 100);
+        pointPaint.setARGB(200, 225, 225, 225);
         pointPaint.setStyle(Paint.Style.FILL);
 
         linePaint = new Paint();
-        linePaint.setColor(Color.LTGRAY);
         linePaint.setStyle(Paint.Style.STROKE);
         linePaint.setStrokeWidth(1);
-        linePaint.setARGB(255, 179, 180, 181);
+        linePaint.setARGB(150, 175, 175, 175);
         linePaint.setAntiAlias(true);
 
         holder = getHolder();
@@ -137,7 +135,7 @@ public class ForceDirectedView extends SurfaceView implements Runnable {
 
     private static void drawVisualisation(List<ForceConnectedNode> dataset,
                                           Paint radioPaint, Paint linePaint, int viewWidth, int viewHeight,
-                                          float nodeRadius, float yScale, Canvas canvas) {
+                                          float nodeRadius, Canvas canvas) {
         canvas.drawColor(Color.argb(255, 31, 31, 31));
         for (ForceConnectedNode node : dataset) {
             float x = node.getX() * viewWidth;
@@ -167,7 +165,7 @@ public class ForceDirectedView extends SurfaceView implements Runnable {
             Canvas canvas = holder.lockCanvas();
             if (canvas != null) {
                 // draw
-                drawVisualisation(dataset, pointPaint, linePaint, width, height, CIRCLE_RADIUS, yScale, canvas);
+                drawVisualisation(dataset, pointPaint, linePaint, width, height, CIRCLE_RADIUS, canvas);
                 holder.unlockCanvasAndPost(canvas);
             }
 
