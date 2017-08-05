@@ -18,7 +18,6 @@ public class ForceDirectedView extends SurfaceView implements Runnable {
     private static final int MAX_FPS = 40; //desired fps
     private static final int FRAME_PERIOD = 1000 / MAX_FPS; // the frame period
     private static final float CIRCLE_RADIUS = 8f;
-    private static final double SPRING_LENGTH = 0.1;
     private static final double SPRING_FACTOR = 1;
     private static final double SPRING_DIVISOR = 0.1;
     private static final double REPEL_FACTOR = 0.5;
@@ -33,8 +32,6 @@ public class ForceDirectedView extends SurfaceView implements Runnable {
     private SurfaceHolder holder;
     private int width;
     private int height;
-    private double edgeLength;
-    private float yScale;
 
     public ForceDirectedView(Context context, @Nullable AttributeSet attrs) {
         super(context, attrs);
@@ -83,8 +80,6 @@ public class ForceDirectedView extends SurfaceView implements Runnable {
         super.onSizeChanged(w, h, oldw, oldh);
         width = w;
         height = h;
-        yScale = w/(float)h;
-        edgeLength = SPRING_LENGTH * width;
     }
 
     private void performStateUpdate() {
