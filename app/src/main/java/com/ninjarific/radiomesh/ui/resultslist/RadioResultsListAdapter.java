@@ -8,7 +8,7 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 
 import com.ninjarific.radiomesh.R;
-import com.ninjarific.radiomesh.database.RadioPoint;
+import com.ninjarific.radiomesh.database.realm.RadioPoint;
 
 import io.realm.OrderedRealmCollection;
 import io.realm.RealmRecyclerViewAdapter;

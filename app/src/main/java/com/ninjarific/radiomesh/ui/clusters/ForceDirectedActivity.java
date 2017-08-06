@@ -6,8 +6,8 @@ import android.support.v7.app.AppCompatActivity;
 
 import com.ninjarific.radiomesh.MainApplication;
 import com.ninjarific.radiomesh.R;
-import com.ninjarific.radiomesh.database.RadioPoint;
-import com.ninjarific.radiomesh.database.RadioPointDatabase;
+import com.ninjarific.radiomesh.database.realm.RadioPoint;
+import com.ninjarific.radiomesh.database.realm.RadioPointDatabase;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -25,7 +25,7 @@ public class ForceDirectedActivity extends AppCompatActivity {
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_clusters);
-        view = (ForceDirectedView) findViewById(R.id.clusters_view);
+        view = findViewById(R.id.clusters_view);
         final int index = getIntent().getExtras().getInt(BUNDLE_INDEX);
         Random random = new Random(0);
         listener = newDataset -> {

@@ -6,7 +6,7 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import com.ninjarific.radiomesh.R;
-import com.ninjarific.radiomesh.database.RadioPoint;
+import com.ninjarific.radiomesh.database.realm.RadioPoint;
 
 import java.util.Collections;
 import java.util.List;

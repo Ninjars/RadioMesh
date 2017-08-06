@@ -1,6 +1,7 @@
-package com.ninjarific.radiomesh.database;
+package com.ninjarific.radiomesh.database.realm;
 
 import android.net.wifi.ScanResult;
+import android.os.AsyncTask;
 import android.support.annotation.Nullable;
 
 import java.util.ArrayList;
@@ -58,7 +59,7 @@ public class RadioPointDatabase implements IDatabase {
     public void registerGroupedRadioPointsListener(RadioPointsUpdateListener listener) {
         listeners.add(listener);
         if (groupedRadioPoints == null && listeners.size() == 1) {
-            beginCachingGroupedRadioPoints();
+            updateGroupedValues.execute();
         }
         if (groupedRadioPoints != null) {
             listener.onDataSetUpdate(groupedRadioPoints);
@@ -69,15 +70,33 @@ public class RadioPointDatabase implements IDatabase {
         listeners.remove(listener);
     }
 
-    private void beginCachingGroupedRadioPoints() {
-        Realm realm = Realm.getDefaultInstance();
-        RealmResults<RadioPoint> query = realm.where(RadioPoint.class).findAllSortedAsync(RadioPoint.KEY_BSSID);
-        query.addChangeListener(radioPointList -> {
-            groupedRadioPoints = groupData(radioPointList);
-            for (RadioPointsUpdateListener listener : listeners) {
-                listener.onDataSetUpdate(groupedRadioPoints);
-            }
-        });
+    private AsyncTask<Void, Void, List<List<RadioPoint>>> updateGroupedValues
+            = new AsyncTask<Void, Void, List<List<RadioPoint>>>() {
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+            Timber.i("Start updating grouped data");
+        }
+
+        @Override
+        protected List<List<RadioPoint>> doInBackground(Void... voids) {
+            Realm realm = Realm.getDefaultInstance();
+            RealmResults<RadioPoint> query = realm.where(RadioPoint.class).findAll();
+            return groupData(realm.copyFromRealm(query));
+        }
+
+        @Override
+        protected void onPostExecute(List<List<RadioPoint>> lists) {
+            Timber.i("Finished updating grouped data");
+            onGroupedDataUpdated(lists);
+        }
+    };
+
+    private void onGroupedDataUpdated(List<List<RadioPoint>> lists) {
+        groupedRadioPoints = lists;
+        for (RadioPointsUpdateListener listener : listeners) {
+            listener.onDataSetUpdate(groupedRadioPoints);
+        }
     }
 
     private List<List<RadioPoint>> groupData(List<RadioPoint> dataset) {

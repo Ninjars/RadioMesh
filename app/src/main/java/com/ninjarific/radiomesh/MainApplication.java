@@ -1,10 +1,12 @@
 package com.ninjarific.radiomesh;
 
 import android.app.Application;
+import android.arch.persistence.room.Room;
 import android.preference.PreferenceManager;
 import android.widget.Toast;
 
-import com.ninjarific.radiomesh.database.RadioPointDatabase;
+import com.ninjarific.radiomesh.database.realm.RadioPointDatabase;
+import com.ninjarific.radiomesh.database.room.RoomDatabase;
 import com.ninjarific.radiomesh.utils.ScanSchedulerUtil;
 
 import io.realm.Realm;
@@ -15,15 +17,18 @@ public class MainApplication extends Application implements IMessageHandler {
     public static final String PREF_BACKGROUND_SCAN = "background_scans";
 
     private static WifiScanner wifiScanner;
-    private static RadioPointDatabase database;
+    private static RadioPointDatabase realmDatabase;
+    private static RoomDatabase roomDatabase;
 
     @Override
     public void onCreate() {
         super.onCreate();
         Timber.plant(new Timber.DebugTree());
         Realm.init(this);
-        database = new RadioPointDatabase();
-        wifiScanner = new WifiScanner(this, database, message
+        realmDatabase = new RadioPointDatabase();
+        roomDatabase = Room.databaseBuilder(this, RoomDatabase.class, "database").build();
+
+        wifiScanner = new WifiScanner(this, realmDatabase, message
                 -> Toast.makeText(this, message, Toast.LENGTH_SHORT).show());
         boolean backgroundScan = PreferenceManager.getDefaultSharedPreferences(getApplicationContext())
                 .getBoolean(PREF_BACKGROUND_SCAN, false);

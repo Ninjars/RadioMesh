@@ -16,7 +16,7 @@ import android.view.View;
 
 import com.ninjarific.radiomesh.MainApplication;
 import com.ninjarific.radiomesh.R;
-import com.ninjarific.radiomesh.database.RadioPoint;
+import com.ninjarific.radiomesh.database.realm.RadioPoint;
 import com.ninjarific.radiomesh.utils.ScanSchedulerUtil;
 
 import io.realm.RealmResults;

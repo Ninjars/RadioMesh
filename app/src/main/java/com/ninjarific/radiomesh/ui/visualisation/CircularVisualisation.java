@@ -11,7 +11,7 @@ import android.support.annotation.Nullable;
 import android.util.AttributeSet;
 import android.view.View;
 
-import com.ninjarific.radiomesh.database.RadioPoint;
+import com.ninjarific.radiomesh.database.realm.RadioPoint;
 
 import java.util.ArrayList;
 import java.util.Collections;

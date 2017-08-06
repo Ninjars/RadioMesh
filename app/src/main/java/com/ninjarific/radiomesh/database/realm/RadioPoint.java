@@ -1,4 +1,4 @@
-package com.ninjarific.radiomesh.database;
+package com.ninjarific.radiomesh.database.realm;
 
 import java.util.Objects;
 
@@ -6,7 +6,7 @@ import io.realm.RealmList;
 import io.realm.RealmObject;
 import io.realm.annotations.PrimaryKey;
 
-public class RadioPoint extends RealmObject {
+public class RadioPoint extends RealmObject implements IRadioPoint {
     public static final String KEY_BSSID = "bssid";
 
     @PrimaryKey
@@ -45,7 +45,7 @@ public class RadioPoint extends RealmObject {
 
     @Override
     public boolean equals(Object obj) {
-        return obj != null && obj.getClass().equals(this.getClass()) && ((RadioPoint)obj).bssid.equals(bssid);
+        return obj != null && obj.getClass().equals(this.getClass()) && ((RadioPoint)obj).bssid.hashCode() == (bssid.hashCode());
     }
 
     @Override

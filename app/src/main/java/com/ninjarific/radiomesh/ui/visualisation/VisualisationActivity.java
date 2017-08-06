@@ -8,7 +8,7 @@ import android.support.v7.widget.RecyclerView;
 
 import com.ninjarific.radiomesh.MainApplication;
 import com.ninjarific.radiomesh.R;
-import com.ninjarific.radiomesh.database.RadioPointDatabase;
+import com.ninjarific.radiomesh.database.realm.RadioPointDatabase;
 import com.ninjarific.radiomesh.ui.clusters.ForceDirectedActivity;
 
 
