@@ -8,14 +8,14 @@ import android.support.v7.widget.RecyclerView;
 
 import com.ninjarific.radiomesh.MainApplication;
 import com.ninjarific.radiomesh.R;
-import com.ninjarific.radiomesh.database.realm.RadioPointDatabase;
+import com.ninjarific.radiomesh.database.realm.RealmDatabase;
 import com.ninjarific.radiomesh.ui.clusters.ForceDirectedActivity;
 
 
 public class VisualisationActivity extends AppCompatActivity {
 
     private VisualsAdapter adapter;
-    private RadioPointDatabase.RadioPointsUpdateListener listener;
+    private RealmDatabase.RadioPointsUpdateListener listener;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {

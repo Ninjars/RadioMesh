@@ -4,6 +4,8 @@ import android.net.wifi.ScanResult;
 import android.os.AsyncTask;
 import android.support.annotation.Nullable;
 
+import com.ninjarific.radiomesh.database.IDatabase;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
@@ -13,7 +15,7 @@ import io.realm.Realm;
 import io.realm.RealmResults;
 import timber.log.Timber;
 
-public class RadioPointDatabase implements IDatabase {
+public class RealmDatabase implements IDatabase {
 
     private final List<RadioPointsUpdateListener> listeners = new ArrayList<>();
     private List<List<RadioPoint>> groupedRadioPoints;

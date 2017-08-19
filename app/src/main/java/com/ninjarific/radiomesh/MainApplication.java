@@ -5,7 +5,7 @@ import android.arch.persistence.room.Room;
 import android.preference.PreferenceManager;
 import android.widget.Toast;
 
-import com.ninjarific.radiomesh.database.realm.RadioPointDatabase;
+import com.ninjarific.radiomesh.database.realm.RealmDatabase;
 import com.ninjarific.radiomesh.database.room.RoomDatabase;
 import com.ninjarific.radiomesh.utils.ScanSchedulerUtil;
 
@@ -17,7 +17,7 @@ public class MainApplication extends Application implements IMessageHandler {
     public static final String PREF_BACKGROUND_SCAN = "background_scans";
 
     private static WifiScanner wifiScanner;
-    private static RadioPointDatabase realmDatabase;
+    private static RealmDatabase realmDatabase;
     private static RoomDatabase roomDatabase;
 
     @Override
@@ -25,7 +25,7 @@ public class MainApplication extends Application implements IMessageHandler {
         super.onCreate();
         Timber.plant(new Timber.DebugTree());
         Realm.init(this);
-        realmDatabase = new RadioPointDatabase();
+        realmDatabase = new RealmDatabase();
         roomDatabase = Room.databaseBuilder(this, RoomDatabase.class, "database").build();
 
         wifiScanner = new WifiScanner(this, realmDatabase, message
@@ -47,7 +47,7 @@ public class MainApplication extends Application implements IMessageHandler {
         Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
     }
 
-    public static RadioPointDatabase getDatabase() {
-        return database;
+    public static RealmDatabase getDatabase() {
+        return realmDatabase;
     }
 }

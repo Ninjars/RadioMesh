@@ -15,11 +15,14 @@ public interface GraphDao {
     @Query("SELECT * FROM graphs")
     List<Graph> getAll();
 
-    @Query("SELECT * FROM graphs WHERE id == :id")
+    @Query("SELECT * FROM graphs WHERE id = :id")
     GraphQuery loadGraph(int id);
 
     @Insert
     void insertAll(Graph... entities);
+
+    @Insert
+    void insert(Graph entity);
 
     @Delete
     void delete(Graph entity);

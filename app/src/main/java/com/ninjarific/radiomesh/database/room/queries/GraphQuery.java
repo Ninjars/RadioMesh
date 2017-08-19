@@ -11,7 +11,7 @@ import java.util.List;
 public class GraphQuery {
     @Embedded
     private Graph graph;
-    @Relation(parentColumn = "id", entityColumn = "graphId", entity = RadioPoint.class)
+    @Relation(parentColumn = "id", entityColumn = "graph_id", entity = RadioPoint.class)
     private List<RadioPoint> radioPoints;
 
     public Graph getGraph() {

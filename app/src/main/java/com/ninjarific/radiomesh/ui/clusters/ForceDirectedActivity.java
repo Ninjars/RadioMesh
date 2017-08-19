@@ -7,7 +7,7 @@ import android.support.v7.app.AppCompatActivity;
 import com.ninjarific.radiomesh.MainApplication;
 import com.ninjarific.radiomesh.R;
 import com.ninjarific.radiomesh.database.realm.RadioPoint;
-import com.ninjarific.radiomesh.database.realm.RadioPointDatabase;
+import com.ninjarific.radiomesh.database.realm.RealmDatabase;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -18,7 +18,7 @@ public class ForceDirectedActivity extends AppCompatActivity {
 
     public static final String BUNDLE_INDEX = "positioned_data_index";
 
-    private RadioPointDatabase.RadioPointsUpdateListener listener;
+    private RealmDatabase.RadioPointsUpdateListener listener;
     private ForceDirectedView view;
 
     @Override

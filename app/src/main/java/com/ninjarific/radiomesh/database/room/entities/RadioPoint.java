@@ -1,5 +1,6 @@
 package com.ninjarific.radiomesh.database.room.entities;
 
+import android.arch.persistence.room.ColumnInfo;
 import android.arch.persistence.room.Entity;
 import android.arch.persistence.room.ForeignKey;
 import android.arch.persistence.room.Ignore;
@@ -10,19 +11,29 @@ import java.util.List;
 
 
 @Entity(tableName = "radiopoints",
-        foreignKeys = @ForeignKey(entity = Graph.class, parentColumns = "id", childColumns = "graphId"),
+        foreignKeys = @ForeignKey(entity = Graph.class, parentColumns = "id", childColumns = "graph_id"),
         indices = {
                 @Index(value = "bssid", unique = true),
-                @Index(value = "graphId")
+                @Index(value = "graph_id")
         })
 public class RadioPoint {
     @PrimaryKey
     private String bssid;
     private String ssid;
+    @ColumnInfo(name = "graph_id")
     private int graphId;
-
     @Ignore
     private List<Connection> connections;
+
+    public RadioPoint() {}
+
+    @Ignore
+    public RadioPoint(String bssid, String ssid, int graphId) {
+        this.bssid = bssid;
+        this.ssid = ssid;
+        this.graphId = graphId;
+    }
+
 
     public List<Connection> getConnections() {
         return connections;

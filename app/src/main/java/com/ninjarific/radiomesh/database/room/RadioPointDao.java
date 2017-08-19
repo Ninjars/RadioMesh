@@ -14,6 +14,9 @@ public interface RadioPointDao {
     @Query("SELECT * FROM radiopoints")
     List<RadioPoint> getAll();
 
+    @Query("SELECT * FROM radiopoints WHERE graph_id LIKE :graphId")
+    List<RadioPoint> getAllForGraph(int graphId);
+
     @Insert
     void insertAll(RadioPoint... entities);
 
