@@ -6,7 +6,7 @@ import android.arch.persistence.room.Insert;
 import android.arch.persistence.room.Query;
 
 import com.ninjarific.radiomesh.database.room.entities.Graph;
-import com.ninjarific.radiomesh.database.room.queries.GraphQuery;
+import com.ninjarific.radiomesh.database.room.queries.PopulatedGraph;
 
 import java.util.List;
 
@@ -16,7 +16,7 @@ public interface GraphDao {
     List<Graph> getAll();
 
     @Query("SELECT * FROM graphs WHERE id = :id")
-    GraphQuery loadGraph(int id);
+    PopulatedGraph loadGraph(int id);
 
     @Insert
     void insertAll(Graph... entities);

@@ -8,6 +8,7 @@ import android.support.test.runner.AndroidJUnit4;
 import com.ninjarific.radiomesh.database.room.entities.Connection;
 import com.ninjarific.radiomesh.database.room.entities.Graph;
 import com.ninjarific.radiomesh.database.room.entities.Node;
+import com.ninjarific.radiomesh.database.room.queries.PopulatedGraph;
 
 import org.junit.After;
 import org.junit.Before;
@@ -108,6 +109,26 @@ public class RoomDatabaseTest {
 
         assertEquals(bssid2, graphNodes.get(1).getBssid());
         assertEquals(ssid2, graphNodes.get(1).getSsid());
+    }
+
+    @Test
+    public void loadPopulatedGraph() throws Exception {
+        Graph graph = new Graph();
+        graphDao.insert(graph);
+
+        int graphId = graphDao.getAll().get(0).getId();
+
+        final String bssid1 = "bssid1";
+        final String ssid1 = "ssid1";
+        final String bssid2 = "bssid2";
+        final String ssid2 = "ssid2";
+        Node node1 = new Node(bssid1, ssid1, graphId);
+        Node node2 = new Node(bssid2, ssid2, graphId);
+
+        nodeDao.insertAll(node1, node2);
+
+        PopulatedGraph loadedGraph = graphDao.loadGraph(graphId);
+        assertEquals(2, loadedGraph.getNodes().size());
     }
 
     @Test

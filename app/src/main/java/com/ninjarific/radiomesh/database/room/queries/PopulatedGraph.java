@@ -8,7 +8,7 @@ import com.ninjarific.radiomesh.database.room.entities.Node;
 
 import java.util.List;
 
-public class GraphQuery {
+public class PopulatedGraph {
     @Embedded
     private Graph graph;
     @Relation(parentColumn = "id", entityColumn = "graph_id", entity = Node.class)
