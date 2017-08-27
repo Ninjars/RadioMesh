@@ -16,7 +16,7 @@ import java.util.List;
                 @Index(value = "bssid", unique = true),
                 @Index(value = "graph_id")
         })
-public class RadioPoint {
+public class Node {
     @PrimaryKey
     private String bssid;
     private String ssid;
@@ -25,15 +25,14 @@ public class RadioPoint {
     @Ignore
     private List<Connection> connections;
 
-    public RadioPoint() {}
+    public Node() {}
 
     @Ignore
-    public RadioPoint(String bssid, String ssid, int graphId) {
+    public Node(String bssid, String ssid, int graphId) {
         this.bssid = bssid;
         this.ssid = ssid;
         this.graphId = graphId;
     }
-
 
     public List<Connection> getConnections() {
         return connections;

@@ -7,8 +7,8 @@ import android.arch.persistence.room.PrimaryKey;
 
 @Entity(tableName = "connections",
         foreignKeys = {
-                @ForeignKey(parentColumns = "bssid", childColumns = "fromNodeId", entity = RadioPoint.class),
-                @ForeignKey(parentColumns = "bssid", childColumns = "toNodeId", entity = RadioPoint.class)
+                @ForeignKey(parentColumns = "bssid", childColumns = "fromNodeId", entity = Node.class),
+                @ForeignKey(parentColumns = "bssid", childColumns = "toNodeId", entity = Node.class)
         },
         indices = {
                 @Index(value = "fromNodeId"),

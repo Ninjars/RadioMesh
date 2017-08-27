@@ -5,7 +5,9 @@ import android.content.Context;
 import android.support.test.InstrumentationRegistry;
 import android.support.test.runner.AndroidJUnit4;
 
+import com.ninjarific.radiomesh.database.room.entities.Connection;
 import com.ninjarific.radiomesh.database.room.entities.Graph;
+import com.ninjarific.radiomesh.database.room.entities.Node;
 
 import org.junit.After;
 import org.junit.Before;
@@ -21,7 +23,7 @@ public class RoomDatabaseTest {
 
     private RoomDatabase database;
     private GraphDao graphDao;
-    private RadioPointDao radioDao;
+    private NodeDao nodeDao;
     private ConnectionDao connectionDao;
 
     @Before
@@ -29,7 +31,7 @@ public class RoomDatabaseTest {
         Context context = InstrumentationRegistry.getTargetContext();
         database = Room.inMemoryDatabaseBuilder(context, RoomDatabase.class).build();
         graphDao = database.getGraphDao();
-        radioDao = database.getRadioPointDao();
+        nodeDao = database.getNodeDao();
         connectionDao = database.getConnectionDao();
     }
 

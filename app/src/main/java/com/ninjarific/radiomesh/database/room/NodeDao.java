@@ -5,21 +5,21 @@ import android.arch.persistence.room.Delete;
 import android.arch.persistence.room.Insert;
 import android.arch.persistence.room.Query;
 
-import com.ninjarific.radiomesh.database.room.entities.RadioPoint;
+import com.ninjarific.radiomesh.database.room.entities.Node;
 
 import java.util.List;
 
 @Dao
-public interface RadioPointDao {
+public interface NodeDao {
     @Query("SELECT * FROM radiopoints")
-    List<RadioPoint> getAll();
+    List<Node> getAll();
 
     @Query("SELECT * FROM radiopoints WHERE graph_id LIKE :graphId")
-    List<RadioPoint> getAllForGraph(int graphId);
+    List<Node> getAllForGraph(int graphId);
 
     @Insert
-    void insertAll(RadioPoint... entities);
+    void insertAll(Node... entities);
 
     @Delete
-    void delete(RadioPoint entity);
+    void delete(Node entity);
 }

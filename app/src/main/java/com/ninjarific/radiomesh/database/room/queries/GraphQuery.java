@@ -4,15 +4,15 @@ import android.arch.persistence.room.Embedded;
 import android.arch.persistence.room.Relation;
 
 import com.ninjarific.radiomesh.database.room.entities.Graph;
-import com.ninjarific.radiomesh.database.room.entities.RadioPoint;
+import com.ninjarific.radiomesh.database.room.entities.Node;
 
 import java.util.List;
 
 public class GraphQuery {
     @Embedded
     private Graph graph;
-    @Relation(parentColumn = "id", entityColumn = "graph_id", entity = RadioPoint.class)
-    private List<RadioPoint> radioPoints;
+    @Relation(parentColumn = "id", entityColumn = "graph_id", entity = Node.class)
+    private List<Node> nodes;
 
     public Graph getGraph() {
         return graph;
@@ -22,11 +22,11 @@ public class GraphQuery {
         this.graph = graph;
     }
 
-    public List<RadioPoint> getRadioPoints() {
-        return radioPoints;
+    public List<Node> getNodes() {
+        return nodes;
     }
 
-    public void setRadioPoints(List<RadioPoint> radioPoints) {
-        this.radioPoints = radioPoints;
+    public void setNodes(List<Node> nodes) {
+        this.nodes = nodes;
     }
 }
