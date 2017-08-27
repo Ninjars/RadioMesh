@@ -17,21 +17,30 @@ import java.util.List;
                 @Index(value = "graph_id")
         })
 public class Node {
-    @PrimaryKey
+    @PrimaryKey(autoGenerate = true)
+    private Long id;
     private String bssid;
     private String ssid;
     @ColumnInfo(name = "graph_id")
-    private int graphId;
+    private long graphId;
     @Ignore
     private List<Connection> connections;
 
     public Node() {}
 
     @Ignore
-    public Node(String bssid, String ssid, int graphId) {
+    public Node(String bssid, String ssid, long graphId) {
         this.bssid = bssid;
         this.ssid = ssid;
         this.graphId = graphId;
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(long id) {
+        this.id = id;
     }
 
     public List<Connection> getConnections() {
@@ -58,11 +67,11 @@ public class Node {
         this.ssid = ssid;
     }
 
-    public int getGraphId() {
+    public long getGraphId() {
         return graphId;
     }
 
-    public void setGraphId(int graphId) {
+    public void setGraphId(long graphId) {
         this.graphId = graphId;
     }
 }

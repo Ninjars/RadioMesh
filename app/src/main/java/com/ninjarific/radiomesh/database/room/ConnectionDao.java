@@ -12,8 +12,8 @@ import java.util.List;
 @Dao
 public interface ConnectionDao {
 
-    @Query("SELECT * FROM connections WHERE fromNodeId LIKE :bssid")
-    List<Connection> getConnectionsForRadioPoint(String bssid);
+    @Query("SELECT * FROM connections WHERE fromNodeId == :id")
+    List<Connection> getConnectionsForRadioPoint(long id);
 
     @Insert
     void insertAll(Connection... entities);

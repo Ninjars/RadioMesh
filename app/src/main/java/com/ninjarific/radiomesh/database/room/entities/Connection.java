@@ -8,8 +8,8 @@ import android.arch.persistence.room.PrimaryKey;
 
 @Entity(tableName = "connections",
         foreignKeys = {
-                @ForeignKey(parentColumns = "bssid", childColumns = "fromNodeId", entity = Node.class),
-                @ForeignKey(parentColumns = "bssid", childColumns = "toNodeId", entity = Node.class)
+                @ForeignKey(parentColumns = "id", childColumns = "fromNodeId", entity = Node.class),
+                @ForeignKey(parentColumns = "id", childColumns = "toNodeId", entity = Node.class)
         },
         indices = {
                 @Index(value = "fromNodeId"),
@@ -19,13 +19,13 @@ public class Connection {
     @PrimaryKey(autoGenerate = true)
     private int id;
 
-    private String fromNodeId;
-    private String toNodeId;
+    private long fromNodeId;
+    private long toNodeId;
 
     public Connection() {}
 
     @Ignore
-    public Connection(String fromNodeId, String toNodeId) {
+    public Connection(long fromNodeId, long toNodeId) {
         this.fromNodeId = fromNodeId;
         this.toNodeId = toNodeId;
     }
@@ -38,19 +38,19 @@ public class Connection {
         this.id = id;
     }
 
-    public String getFromNodeId() {
+    public long getFromNodeId() {
         return fromNodeId;
     }
 
-    public void setFromNodeId(String fromNodeId) {
+    public void setFromNodeId(long fromNodeId) {
         this.fromNodeId = fromNodeId;
     }
 
-    public String getToNodeId() {
+    public long getToNodeId() {
         return toNodeId;
     }
 
-    public void setToNodeId(String toNodeId) {
+    public void setToNodeId(long toNodeId) {
         this.toNodeId = toNodeId;
     }
 }

@@ -62,11 +62,16 @@ public class RoomDatabaseTest {
     public void writeNodeIn() throws Exception {
         Graph graph = new Graph();
         graphDao.insert(graph);
-        int graphId = graphDao.getAll().get(0).getId();
+        long graphId = graphDao.getAll().get(0).getId();
         Node node = new Node("bssid", "ssid", graphId);
-        nodeDao.insertAll(node);
+        long nodeId = nodeDao.insert(node);
 
-        node = nodeDao.getAll().get(0);
+        node = nodeDao.get(nodeId);
+        assertEquals("bssid", node.getBssid());
+        assertEquals("ssid", node.getSsid());
+        assertEquals(graphId, node.getGraphId());
+
+        node = nodeDao.get("bssid");
         assertEquals("bssid", node.getBssid());
         assertEquals("ssid", node.getSsid());
         assertEquals(graphId, node.getGraphId());
@@ -76,7 +81,7 @@ public class RoomDatabaseTest {
     public void deleteNode() throws Exception {
         Graph graph = new Graph();
         graphDao.insert(graph);
-        int graphId = graphDao.getAll().get(0).getId();
+        long graphId = graphDao.getAll().get(0).getId();
         Node node = new Node("bssid", "ssid", graphId);
         nodeDao.insertAll(node);
         nodeDao.delete(nodeDao.getAll().get(0));
@@ -116,7 +121,7 @@ public class RoomDatabaseTest {
         Graph graph = new Graph();
         graphDao.insert(graph);
 
-        int graphId = graphDao.getAll().get(0).getId();
+        long graphId = graphDao.getAll().get(0).getId();
 
         final String bssid1 = "bssid1";
         final String ssid1 = "ssid1";
@@ -135,7 +140,7 @@ public class RoomDatabaseTest {
     public void connectNodes() throws Exception {
         Graph graph = new Graph();
         graphDao.insert(graph);
-        int graphId = graphDao.getAll().get(0).getId();
+        long graphId = graphDao.getAll().get(0).getId();
 
         final String bssid1 = "bssid1";
         final String ssid1 = "ssid1";
@@ -143,17 +148,17 @@ public class RoomDatabaseTest {
         final String ssid2 = "ssid2";
         Node node1 = new Node(bssid1, ssid1, graphId);
         Node node2 = new Node(bssid2, ssid2, graphId);
-        nodeDao.insertAll(node1, node2);
+        List<Long> ids = nodeDao.insertAll(node1, node2);
 
-        Connection connection = new Connection(node1.getBssid(), node2.getBssid());
+        Connection connection = new Connection(ids.get(0), ids.get(1));
         connectionDao.insertAll(connection);
 
-        connection = connectionDao.getConnectionsForRadioPoint(bssid1).get(0);
+        connection = connectionDao.getConnectionsForRadioPoint(ids.get(0)).get(0);
 
-        assertEquals(bssid1, connection.getFromNodeId());
-        assertEquals(bssid2, connection.getToNodeId());
+        assertEquals((long) ids.get(0), connection.getFromNodeId());
+        assertEquals((long) ids.get(1), connection.getToNodeId());
 
-        List<Connection> oneWayConnections = connectionDao.getConnectionsForRadioPoint(bssid2);
+        List<Connection> oneWayConnections = connectionDao.getConnectionsForRadioPoint(ids.get(1));
         assertEquals(0, oneWayConnections.size());
     }
 }

@@ -2,16 +2,17 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "d913063d63526a9e461e420d90474d7c",
+    "identityHash": "d60e5e1f82ebe2b209cf6e4604bf471e",
     "entities": [
       {
         "tableName": "graphs",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT)",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL)",
         "fields": [
           {
             "fieldPath": "id",
             "columnName": "id",
-            "affinity": "INTEGER"
+            "affinity": "INTEGER",
+            "notNull": true
           }
         ],
         "primaryKey": {
@@ -34,29 +35,38 @@
       },
       {
         "tableName": "radiopoints",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`bssid` TEXT, `ssid` TEXT, `graph_id` INTEGER, PRIMARY KEY(`bssid`), FOREIGN KEY(`graph_id`) REFERENCES `graphs`(`id`) ON UPDATE NO ACTION ON DELETE NO ACTION )",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT, `bssid` TEXT, `ssid` TEXT, `graph_id` INTEGER NOT NULL, FOREIGN KEY(`graph_id`) REFERENCES `graphs`(`id`) ON UPDATE NO ACTION ON DELETE NO ACTION )",
         "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": false
+          },
           {
             "fieldPath": "bssid",
             "columnName": "bssid",
-            "affinity": "TEXT"
+            "affinity": "TEXT",
+            "notNull": false
           },
           {
             "fieldPath": "ssid",
             "columnName": "ssid",
-            "affinity": "TEXT"
+            "affinity": "TEXT",
+            "notNull": false
           },
           {
             "fieldPath": "graphId",
             "columnName": "graph_id",
-            "affinity": "INTEGER"
+            "affinity": "INTEGER",
+            "notNull": true
           }
         ],
         "primaryKey": {
           "columnNames": [
-            "bssid"
+            "id"
           ],
-          "autoGenerate": false
+          "autoGenerate": true
         },
         "indices": [
           {
@@ -92,22 +102,25 @@
       },
       {
         "tableName": "connections",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT, `fromNodeId` TEXT, `toNodeId` TEXT, FOREIGN KEY(`fromNodeId`) REFERENCES `radiopoints`(`bssid`) ON UPDATE NO ACTION ON DELETE NO ACTION , FOREIGN KEY(`toNodeId`) REFERENCES `radiopoints`(`bssid`) ON UPDATE NO ACTION ON DELETE NO ACTION )",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `fromNodeId` INTEGER NOT NULL, `toNodeId` INTEGER NOT NULL, FOREIGN KEY(`fromNodeId`) REFERENCES `radiopoints`(`id`) ON UPDATE NO ACTION ON DELETE NO ACTION , FOREIGN KEY(`toNodeId`) REFERENCES `radiopoints`(`id`) ON UPDATE NO ACTION ON DELETE NO ACTION )",
         "fields": [
           {
             "fieldPath": "id",
             "columnName": "id",
-            "affinity": "INTEGER"
+            "affinity": "INTEGER",
+            "notNull": true
           },
           {
             "fieldPath": "fromNodeId",
             "columnName": "fromNodeId",
-            "affinity": "TEXT"
+            "affinity": "INTEGER",
+            "notNull": true
           },
           {
             "fieldPath": "toNodeId",
             "columnName": "toNodeId",
-            "affinity": "TEXT"
+            "affinity": "INTEGER",
+            "notNull": true
           }
         ],
         "primaryKey": {
@@ -143,7 +156,7 @@
               "fromNodeId"
             ],
             "referencedColumns": [
-              "bssid"
+              "id"
             ]
           },
           {
@@ -154,7 +167,7 @@
               "toNodeId"
             ],
             "referencedColumns": [
-              "bssid"
+              "id"
             ]
           }
         ]
@@ -162,7 +175,7 @@
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, \"d913063d63526a9e461e420d90474d7c\")"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, \"d60e5e1f82ebe2b209cf6e4604bf471e\")"
     ]
   }
 }
