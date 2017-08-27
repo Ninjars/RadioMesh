@@ -54,8 +54,12 @@ public class WifiScanner {
         }
     }
 
-    public void triggerScan(Context context) {
+    public void triggerScan() {
         Timber.i("startScan()");
+        if (!wifiManager.isWifiEnabled()) {
+            Timber.w(">> aborting scan; wifi not enabled");
+            return;
+        }
         switch (scanState) {
             case SCANNING:
                 sendMessage("Scan already running");
@@ -66,33 +70,33 @@ public class WifiScanner {
                 break;
 
             case IDLE:
-                scanState = ScanState.PENDING;
-                enableWifi(context);
+                if (ableToScan()) {
+                    startScan();
+                    scanState = ScanState.PENDING;
+                }
                 break;
         }
     }
 
-    public void triggerBackgroundScan(Context applicationContext, Runnable scanFinishedCallback) {
+    public void triggerBackgroundScan(Runnable scanFinishedCallback) {
         this.scanFinishedCallback = scanFinishedCallback;
-        triggerScan(applicationContext);
+        triggerScan();
     }
 
     public void clearBackgroundScan() {
         scanFinishedCallback = null;
     }
 
-    private void enableWifi(Context context) {
+    private boolean ableToScan() {
         if (!wifiManager.isWifiEnabled()) {
-            Timber.i("Enabling WiFi");
-            wifiManager.setWifiEnabled(true);
-            context.registerReceiver(broadCastReceiver, new IntentFilter(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION));
+            return false;
         } else {
             Timber.d("Wifi enabled already");
-            onWifiReadyForScan();
+            return true;
         }
     }
 
-    private void onWifiReadyForScan() {
+    private void startScan() {
         if (scanState == ScanState.PENDING) {
             Timber.d("\t start scan");
             sendMessage("Scanning");
@@ -106,7 +110,7 @@ public class WifiScanner {
         switch (intExtra) {
             case WifiManager.WIFI_STATE_ENABLED:
                 Timber.d("\t WIFI_STATE_ENABLED");
-                onWifiReadyForScan();
+                startScan();
                 break;
         }
     }

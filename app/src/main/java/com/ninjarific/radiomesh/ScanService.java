@@ -14,7 +14,7 @@ public class ScanService extends JobService {
         Context context = getApplicationContext();
         WifiScanner wifiScanner = MainApplication.getWifiScanner();
         wifiScanner.register(context);
-        wifiScanner.triggerBackgroundScan(context, () -> {
+        wifiScanner.triggerBackgroundScan(() -> {
             Timber.d("job finished callback");
             wifiScanner.unregister(context);
             jobFinished (jobParameters, false);

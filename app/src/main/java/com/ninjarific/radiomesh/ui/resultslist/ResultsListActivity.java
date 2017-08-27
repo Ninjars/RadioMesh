@@ -52,7 +52,7 @@ public class ResultsListActivity extends AppCompatActivity {
                 requestPermissions(new String[]{Manifest.permission.ACCESS_COARSE_LOCATION},
                         PERMISSIONS_REQUEST_CODE_ACCESS_LOCATION);
             } else {
-                MainApplication.getWifiScanner().triggerScan(view.getContext());
+                MainApplication.getWifiScanner().triggerScan();
             }
         });
 
@@ -98,7 +98,7 @@ public class ResultsListActivity extends AppCompatActivity {
         if (requestCode == PERMISSIONS_REQUEST_CODE_ACCESS_LOCATION
                 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
             // Do something with granted permission
-            MainApplication.getWifiScanner().triggerScan(this);
+            MainApplication.getWifiScanner().triggerScan();
         }
     }
 }
