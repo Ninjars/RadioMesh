@@ -2,6 +2,7 @@ package com.ninjarific.radiomesh.database.room.entities;
 
 import android.arch.persistence.room.Entity;
 import android.arch.persistence.room.ForeignKey;
+import android.arch.persistence.room.Ignore;
 import android.arch.persistence.room.Index;
 import android.arch.persistence.room.PrimaryKey;
 
@@ -20,6 +21,14 @@ public class Connection {
 
     private String fromNodeId;
     private String toNodeId;
+
+    public Connection() {}
+
+    @Ignore
+    public Connection(String fromNodeId, String toNodeId) {
+        this.fromNodeId = fromNodeId;
+        this.toNodeId = toNodeId;
+    }
 
     public int getId() {
         return id;
