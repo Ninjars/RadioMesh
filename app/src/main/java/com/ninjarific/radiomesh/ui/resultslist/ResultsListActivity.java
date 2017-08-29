@@ -16,25 +16,26 @@ import android.view.View;
 
 import com.ninjarific.radiomesh.MainApplication;
 import com.ninjarific.radiomesh.R;
-import com.ninjarific.radiomesh.database.realm.RadioPoint;
+import com.ninjarific.radiomesh.database.room.DatabaseHelper;
 import com.ninjarific.radiomesh.utils.ScanSchedulerUtil;
 
-import io.realm.RealmResults;
 import timber.log.Timber;
 
 public class ResultsListActivity extends AppCompatActivity {
     private static final int PERMISSIONS_REQUEST_CODE_ACCESS_LOCATION = 666;
     private RecyclerView recyclerView;
+    private GraphsListAdapter adapter;
+    private DatabaseHelper dbHelper;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        SwitchCompat toggleButton = (SwitchCompat) findViewById(R.id.button_background_scan);
+        SwitchCompat toggleButton = findViewById(R.id.button_background_scan);
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
         toggleButton.setChecked(sharedPreferences.getBoolean(MainApplication.PREF_BACKGROUND_SCAN, false));
         toggleButton.setOnCheckedChangeListener((buttonView, isChecked) -> {
@@ -52,17 +53,24 @@ public class ResultsListActivity extends AppCompatActivity {
                 requestPermissions(new String[]{Manifest.permission.ACCESS_COARSE_LOCATION},
                         PERMISSIONS_REQUEST_CODE_ACCESS_LOCATION);
             } else {
-                MainApplication.getWifiScanner().triggerScan();
+                MainApplication.getWifiScanner().triggerScan(this::updateData);
             }
         });
 
-        RealmResults<RadioPoint> radioPoints = MainApplication.getDatabase().getRadioPoints();
-        RadioResultsListAdapter adapter = new RadioResultsListAdapter(radioPoints);
-        recyclerView = (RecyclerView) findViewById(R.id.recycler_view);
+        dbHelper = MainApplication.getDatabaseHelper();
+
+        adapter = new GraphsListAdapter();
+        updateData();
+
+        recyclerView = findViewById(R.id.recycler_view);
         recyclerView.setAdapter(adapter);
         recyclerView.setHasFixedSize(true);
         recyclerView.addItemDecoration(new DividerItemDecoration(this, DividerItemDecoration.VERTICAL));
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
+    }
+
+    private void updateData() {
+        dbHelper.getAllGraphs(graphs -> adapter.setCurrentData(graphs));
     }
 
     private void setBackgroundScanState(boolean enabled) {
@@ -98,7 +106,7 @@ public class ResultsListActivity extends AppCompatActivity {
         if (requestCode == PERMISSIONS_REQUEST_CODE_ACCESS_LOCATION
                 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
             // Do something with granted permission
-            MainApplication.getWifiScanner().triggerScan();
+            MainApplication.getWifiScanner().triggerScan(this::updateData);
         }
     }
 }

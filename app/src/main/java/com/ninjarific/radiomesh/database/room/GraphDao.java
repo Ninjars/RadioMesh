@@ -18,6 +18,9 @@ public interface GraphDao {
     @Query("SELECT * FROM graphs WHERE id = :id LIMIT 1")
     PopulatedGraph loadGraph(long id);
 
+    @Query("SELECT * FROM graphs")
+    List<PopulatedGraph> loadGraphs();
+
     @Insert
     void insertAll(Graph... entities);
 

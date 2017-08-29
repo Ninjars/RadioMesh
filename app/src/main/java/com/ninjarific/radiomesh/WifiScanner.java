@@ -54,7 +54,8 @@ public class WifiScanner {
         }
     }
 
-    public void triggerScan() {
+    public void triggerScan(@Nullable Runnable onFinishedCallback) {
+        this.scanFinishedCallback = onFinishedCallback;
         Timber.i("startScan()");
         if (!wifiManager.isWifiEnabled()) {
             Timber.w(">> aborting scan; wifi not enabled");
@@ -71,16 +72,11 @@ public class WifiScanner {
 
             case IDLE:
                 if (ableToScan()) {
-                    startScan();
                     scanState = ScanState.PENDING;
+                    startScan();
                 }
                 break;
         }
-    }
-
-    public void triggerBackgroundScan(Runnable scanFinishedCallback) {
-        this.scanFinishedCallback = scanFinishedCallback;
-        triggerScan();
     }
 
     public void clearBackgroundScan() {
