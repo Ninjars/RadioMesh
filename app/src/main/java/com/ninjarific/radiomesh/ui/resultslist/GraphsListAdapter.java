@@ -1,6 +1,5 @@
 package com.ninjarific.radiomesh.ui.resultslist;
 
-import android.support.v7.util.DiffUtil;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -8,20 +7,24 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 
 import com.ninjarific.radiomesh.R;
-import com.ninjarific.radiomesh.database.room.queries.PopulatedGraph;
 
 import java.util.Collections;
 import java.util.List;
 
+import io.reactivex.Flowable;
+import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.disposables.Disposable;
+import io.reactivex.schedulers.Schedulers;
+import timber.log.Timber;
+
 class GraphsListAdapter extends RecyclerView.Adapter<GraphsListAdapter.GraphViewHolder> {
 
-    private List<PopulatedGraph> currentData = Collections.emptyList();
+    private List<Flowable<GraphNodes>> currentData = Collections.emptyList();
 
-    public void setCurrentData(List<PopulatedGraph> data) {
-        GraphListDiffCallback diffCallback = new GraphListDiffCallback(currentData, data);
-        DiffUtil.DiffResult result = DiffUtil.calculateDiff(diffCallback);
+    private void setCurrentData(List<Flowable<GraphNodes>> data) {
+        Timber.i("setCurrentData " + data.size());
         currentData = data;
-        result.dispatchUpdatesTo(this);
+        notifyDataSetChanged();
     }
 
     @Override
@@ -40,11 +43,19 @@ class GraphsListAdapter extends RecyclerView.Adapter<GraphsListAdapter.GraphView
         return currentData.size();
     }
 
+    public Disposable bind(Flowable<List<Flowable<GraphNodes>>> populatedGraphs) {
+        return populatedGraphs
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(this::setCurrentData, Throwable::printStackTrace);
+    }
+
     class GraphViewHolder extends RecyclerView.ViewHolder {
         private final TextView titleView;
         private final TextView countView;
         private final String idStringFormat;
         private final String countStringFormat;
+        private Disposable disposable;
 
         GraphViewHolder(View itemView) {
             super(itemView);
@@ -54,9 +65,19 @@ class GraphsListAdapter extends RecyclerView.Adapter<GraphsListAdapter.GraphView
             countStringFormat = itemView.getContext().getString(R.string.count_readout);
         }
 
-        void update(PopulatedGraph populatedGraph) {
-            titleView.setText(String.format(idStringFormat, String.valueOf(populatedGraph.getGraph().getId())));
-            countView.setText(String.format(countStringFormat, String.valueOf(populatedGraph.getNodes().size())));
+        void update(Flowable<GraphNodes> populatedGraph) {
+            if (disposable != null && !disposable.isDisposed()) {
+                disposable.dispose();
+            }
+            disposable = populatedGraph
+                    .subscribeOn(Schedulers.io())
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .subscribe(graph -> {
+                                Timber.i("update graphNode " + graph.getGraphId());
+                                titleView.setText(String.format(idStringFormat, String.valueOf(graph.getGraphId())));
+                                countView.setText(String.format(countStringFormat, String.valueOf(graph.getNodes().size())));
+                            },
+                            Throwable::printStackTrace);
         }
     }
 }

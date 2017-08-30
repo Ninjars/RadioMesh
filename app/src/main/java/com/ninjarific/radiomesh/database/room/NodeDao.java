@@ -11,6 +11,8 @@ import com.ninjarific.radiomesh.database.room.entities.Node;
 
 import java.util.List;
 
+import io.reactivex.Flowable;
+
 @Dao
 public interface NodeDao {
     @Query("SELECT * FROM radiopoints")
@@ -24,6 +26,12 @@ public interface NodeDao {
 
     @Query("SELECT * FROM radiopoints WHERE graph_id LIKE :graphId")
     List<Node> getAllForGraph(long graphId);
+
+    @Query("SELECT * FROM radiopoints WHERE graph_id LIKE :graphId")
+    Flowable<List<Node>> observeForGraph(long graphId);
+
+    @Query("SELECT * FROM radiopoints")
+    Flowable<List<Node>> observeAll();
 
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     Long insert(Node entity);

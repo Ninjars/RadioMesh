@@ -17,8 +17,14 @@ import android.view.View;
 import com.ninjarific.radiomesh.MainApplication;
 import com.ninjarific.radiomesh.R;
 import com.ninjarific.radiomesh.database.room.DatabaseHelper;
+import com.ninjarific.radiomesh.database.room.entities.Graph;
 import com.ninjarific.radiomesh.utils.ScanSchedulerUtil;
+import com.ninjarific.radiomesh.utils.listutils.ListUtils;
 
+import java.util.List;
+
+import io.reactivex.Flowable;
+import io.reactivex.disposables.Disposable;
 import timber.log.Timber;
 
 public class ResultsListActivity extends AppCompatActivity {
@@ -26,6 +32,7 @@ public class ResultsListActivity extends AppCompatActivity {
     private RecyclerView recyclerView;
     private GraphsListAdapter adapter;
     private DatabaseHelper dbHelper;
+    private Disposable disposable;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -53,14 +60,20 @@ public class ResultsListActivity extends AppCompatActivity {
                 requestPermissions(new String[]{Manifest.permission.ACCESS_COARSE_LOCATION},
                         PERMISSIONS_REQUEST_CODE_ACCESS_LOCATION);
             } else {
-                MainApplication.getWifiScanner().triggerScan(this::updateData);
+                MainApplication.getWifiScanner().triggerScan(null);
             }
         });
 
         dbHelper = MainApplication.getDatabaseHelper();
 
         adapter = new GraphsListAdapter();
-        updateData();
+
+        Flowable<List<Flowable<GraphNodes>>> graphNodesFlowable = dbHelper.observeGraphs()
+                .map(graphs ->  {
+                    Timber.i("graphNodesFlowable fired");
+                    return ListUtils.map(graphs, this::getGraphNodesFlowable);
+                });
+        disposable = adapter.bind(graphNodesFlowable);
 
         recyclerView = findViewById(R.id.recycler_view);
         recyclerView.setAdapter(adapter);
@@ -69,8 +82,8 @@ public class ResultsListActivity extends AppCompatActivity {
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
     }
 
-    private void updateData() {
-        dbHelper.getAllGraphs(graphs -> adapter.setCurrentData(graphs));
+    private Flowable<GraphNodes> getGraphNodesFlowable(Graph graph) {
+        return dbHelper.getNodesForGraphObs(graph.getId()).map(nodeList -> new GraphNodes(graph.getId(), nodeList));
     }
 
     private void setBackgroundScanState(boolean enabled) {
@@ -98,6 +111,9 @@ public class ResultsListActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        if (disposable != null && !disposable.isDisposed()) {
+            disposable.dispose();
+        }
         recyclerView.setAdapter(null);
     }
 
@@ -106,7 +122,7 @@ public class ResultsListActivity extends AppCompatActivity {
         if (requestCode == PERMISSIONS_REQUEST_CODE_ACCESS_LOCATION
                 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
             // Do something with granted permission
-            MainApplication.getWifiScanner().triggerScan(this::updateData);
+            MainApplication.getWifiScanner().triggerScan(null);
         }
     }
 }

@@ -10,6 +10,8 @@ import com.ninjarific.radiomesh.database.room.queries.PopulatedGraph;
 
 import java.util.List;
 
+import io.reactivex.Flowable;
+
 @Dao
 public interface GraphDao {
     @Query("SELECT * FROM graphs")
@@ -20,6 +22,9 @@ public interface GraphDao {
 
     @Query("SELECT * FROM graphs")
     List<PopulatedGraph> loadGraphs();
+
+    @Query("SELECT * FROM graphs")
+    Flowable<List<Graph>> getGraphsObservable();
 
     @Insert
     void insertAll(Graph... entities);

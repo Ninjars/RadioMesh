@@ -18,6 +18,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import io.reactivex.Flowable;
 import timber.log.Timber;
 
 public class DatabaseHelper implements IDatabase {
@@ -30,6 +31,18 @@ public class DatabaseHelper implements IDatabase {
 
     private DatabaseHelper(RoomDatabase database) {
         this.database = database;
+    }
+
+    public Flowable<List<Graph>> observeGraphs() {
+        return database.getGraphDao().getGraphsObservable();
+    }
+
+    public Flowable<List<Node>> getNodesForGraphObs(long graphId) {
+        return database.getNodeDao().observeForGraph(graphId);
+    }
+
+    public Flowable<List<Node>> getAllNodes() {
+        return database.getNodeDao().observeAll();
     }
 
     public void getAllGraphs(GraphLoadedCallback callback) {
