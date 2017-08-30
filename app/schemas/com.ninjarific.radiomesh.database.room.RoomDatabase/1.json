@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "55a118db278b48584b0528efe10ce235",
+    "identityHash": "81ace3fea367fea41b21ce23d79c3753",
     "entities": [
       {
         "tableName": "graphs",
@@ -138,6 +138,14 @@
               "toNodeId"
             ],
             "createSql": "CREATE UNIQUE INDEX `index_connections_fromNodeId_toNodeId`\nON `${TABLE_NAME}` (`fromNodeId`, `toNodeId`)"
+          },
+          {
+            "name": "index_connections_toNodeId",
+            "unique": false,
+            "columnNames": [
+              "toNodeId"
+            ],
+            "createSql": "CREATE  INDEX `index_connections_toNodeId`\nON `${TABLE_NAME}` (`toNodeId`)"
           }
         ],
         "foreignKeys": [
@@ -168,7 +176,7 @@
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, \"55a118db278b48584b0528efe10ce235\")"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, \"81ace3fea367fea41b21ce23d79c3753\")"
     ]
   }
 }

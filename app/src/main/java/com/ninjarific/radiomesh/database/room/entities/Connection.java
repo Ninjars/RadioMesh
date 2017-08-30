@@ -12,7 +12,8 @@ import android.arch.persistence.room.PrimaryKey;
                 @ForeignKey(parentColumns = "id", childColumns = "toNodeId", entity = Node.class)
         },
         indices = {
-                @Index(value = {"fromNodeId", "toNodeId"}, unique = true)
+                @Index(value = {"fromNodeId", "toNodeId"}, unique = true),
+                @Index(value = {"toNodeId"})
         })
 public class Connection {
     @PrimaryKey(autoGenerate = true)
