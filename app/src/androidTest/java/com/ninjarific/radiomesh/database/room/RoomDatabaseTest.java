@@ -15,6 +15,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import java.util.Collections;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
@@ -151,7 +152,7 @@ public class RoomDatabaseTest {
         List<Long> ids = nodeDao.insertAll(node1, node2);
 
         Connection connection = new Connection(ids.get(0), ids.get(1));
-        connectionDao.insertAll(connection);
+        connectionDao.insertAll(Collections.singletonList(connection));
 
         connection = connectionDao.getConnectionsForRadioPoint(ids.get(0)).get(0);
 
