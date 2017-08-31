@@ -45,10 +45,6 @@ public class DatabaseHelper implements IDatabase {
         return database.getNodeDao().observeAll();
     }
 
-    public void getAllGraphs(GraphLoadedCallback callback) {
-        new LoadGraphs(callback).execute();
-    }
-
     @Override
     public void registerScanResults(List<ScanResult> scanResults, @Nullable Runnable scanFinishedCallback) {
         new ProcessScanResults(scanResults, scanFinishedCallback).execute();
@@ -67,27 +63,12 @@ public class DatabaseHelper implements IDatabase {
         return connections;
     }
 
-    public interface GraphLoadedCallback {
-        void onGraphsLoaded(List<PopulatedGraph> graphs);
+    public List<Connection> getConnectedNodes(long nodeId) {
+        return database.getConnectionDao().getConnectionsForNode(nodeId);
     }
 
-    private class LoadGraphs extends AsyncTask<Void, Void, List<PopulatedGraph>> {
-        private final GraphLoadedCallback callback;
-
-        public LoadGraphs(GraphLoadedCallback callback) {
-            this.callback = callback;
-        }
-
-        @Override
-        protected List<PopulatedGraph> doInBackground(Void... voids) {
-            return database.getGraphDao().loadGraphs();
-        }
-
-        @Override
-        protected void onPostExecute(List<PopulatedGraph> populatedGraphs) {
-            super.onPostExecute(populatedGraphs);
-            callback.onGraphsLoaded(populatedGraphs);
-        }
+    public Node getNode(long nodeId) {
+        return database.getNodeDao().get(nodeId);
     }
 
     private class ProcessScanResults extends AsyncTask<Void, Void, Void> {

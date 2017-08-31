@@ -1,6 +1,7 @@
 package com.ninjarific.radiomesh.ui.resultslist;
 
 import android.Manifest;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.os.Build;
@@ -18,6 +19,7 @@ import com.ninjarific.radiomesh.MainApplication;
 import com.ninjarific.radiomesh.R;
 import com.ninjarific.radiomesh.database.room.DatabaseHelper;
 import com.ninjarific.radiomesh.database.room.entities.Graph;
+import com.ninjarific.radiomesh.ui.clusters.ForceDirectedActivity;
 import com.ninjarific.radiomesh.utils.ScanSchedulerUtil;
 import com.ninjarific.radiomesh.utils.listutils.ListUtils;
 
@@ -66,7 +68,11 @@ public class ResultsListActivity extends AppCompatActivity {
 
         dbHelper = MainApplication.getDatabaseHelper();
 
-        adapter = new GraphsListAdapter();
+        adapter = new GraphsListAdapter(graphId -> {
+            Intent intent = new Intent(this, ForceDirectedActivity.class);
+            intent.putExtra(ForceDirectedActivity.BUNDLE_GRAPH_ID, graphId);
+            this.startActivity(intent);
+        });
 
         Flowable<List<Flowable<GraphNodes>>> graphNodesFlowable = dbHelper.observeGraphs()
                 .map(graphs ->  {

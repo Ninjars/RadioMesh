@@ -9,6 +9,7 @@ import android.util.AttributeSet;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 
+import java.util.Collections;
 import java.util.List;
 
 import timber.log.Timber;
@@ -28,7 +29,7 @@ public class ForceDirectedView extends SurfaceView implements Runnable {
 
     private Paint pointPaint;
     private Paint linePaint;
-    private List<ForceConnectedNode> dataset;
+    private List<ForceConnectedNode> dataset = Collections.emptyList();
     private SurfaceHolder holder;
     private int width;
     private int height;

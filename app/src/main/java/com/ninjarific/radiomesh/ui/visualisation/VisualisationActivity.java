@@ -28,7 +28,7 @@ public class VisualisationActivity extends AppCompatActivity {
         adapter = new VisualsAdapter(position -> {
             Intent intent = new Intent(this, ForceDirectedActivity.class);
             Bundle extras = new Bundle();
-            extras.putInt(ForceDirectedActivity.BUNDLE_INDEX, position);
+            extras.putInt(ForceDirectedActivity.BUNDLE_GRAPH_ID, position);
             intent.putExtras(extras);
             this.startActivity(intent);
         });

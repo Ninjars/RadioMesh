@@ -19,7 +19,12 @@ import timber.log.Timber;
 
 class GraphsListAdapter extends RecyclerView.Adapter<GraphsListAdapter.GraphViewHolder> {
 
+    private final ISelectionListener listener;
     private List<Flowable<GraphNodes>> currentData = Collections.emptyList();
+
+    public GraphsListAdapter(ISelectionListener selectionListener) {
+        listener = selectionListener;
+    }
 
     private void setCurrentData(List<Flowable<GraphNodes>> data) {
         Timber.i("setCurrentData " + data.size());
@@ -30,7 +35,7 @@ class GraphsListAdapter extends RecyclerView.Adapter<GraphsListAdapter.GraphView
     @Override
     public GraphViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         View itemView = LayoutInflater.from(parent.getContext()).inflate(R.layout.list_item_graph, parent, false);
-        return new GraphViewHolder(itemView);
+        return new GraphViewHolder(itemView, listener);
     }
 
     @Override
@@ -55,14 +60,18 @@ class GraphsListAdapter extends RecyclerView.Adapter<GraphsListAdapter.GraphView
         private final TextView countView;
         private final String idStringFormat;
         private final String countStringFormat;
+        private final View itemView;
+        private final ISelectionListener listener;
         private Disposable disposable;
 
-        GraphViewHolder(View itemView) {
+        GraphViewHolder(View itemView, ISelectionListener listener) {
             super(itemView);
             titleView = itemView.findViewById(R.id.id);
             countView = itemView.findViewById(R.id.count);
             idStringFormat = itemView.getContext().getString(R.string.id_readout);
             countStringFormat = itemView.getContext().getString(R.string.count_readout);
+            this.itemView = itemView;
+            this.listener = listener;
         }
 
         void update(Flowable<GraphNodes> populatedGraph) {
@@ -74,6 +83,7 @@ class GraphsListAdapter extends RecyclerView.Adapter<GraphsListAdapter.GraphView
                     .observeOn(AndroidSchedulers.mainThread())
                     .subscribe(graph -> {
                                 Timber.i("update graphNode " + graph.getGraphId());
+                                itemView.setOnClickListener(view -> listener.onGraphSelected(graph.getGraphId()));
                                 titleView.setText(String.format(idStringFormat, String.valueOf(graph.getGraphId())));
                                 countView.setText(String.format(countStringFormat, String.valueOf(graph.getNodes().size())));
                             },

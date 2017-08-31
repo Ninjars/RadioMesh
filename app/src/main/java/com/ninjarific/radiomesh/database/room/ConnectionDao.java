@@ -14,7 +14,7 @@ import java.util.List;
 public interface ConnectionDao {
 
     @Query("SELECT * FROM connections WHERE fromNodeId == :id")
-    List<Connection> getConnectionsForRadioPoint(long id);
+    List<Connection> getConnectionsForNode(long id);
 
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     void insertAll(List<Connection> entities);

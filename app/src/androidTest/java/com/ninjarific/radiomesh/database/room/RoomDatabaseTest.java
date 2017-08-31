@@ -154,12 +154,12 @@ public class RoomDatabaseTest {
         Connection connection = new Connection(ids.get(0), ids.get(1));
         connectionDao.insertAll(Collections.singletonList(connection));
 
-        connection = connectionDao.getConnectionsForRadioPoint(ids.get(0)).get(0);
+        connection = connectionDao.getConnectionsForNode(ids.get(0)).get(0);
 
         assertEquals((long) ids.get(0), connection.getFromNodeId());
         assertEquals((long) ids.get(1), connection.getToNodeId());
 
-        List<Connection> oneWayConnections = connectionDao.getConnectionsForRadioPoint(ids.get(1));
+        List<Connection> oneWayConnections = connectionDao.getConnectionsForNode(ids.get(1));
         assertEquals(0, oneWayConnections.size());
     }
 }
