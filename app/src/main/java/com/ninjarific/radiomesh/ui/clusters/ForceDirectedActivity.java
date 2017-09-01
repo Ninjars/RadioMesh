@@ -63,10 +63,11 @@ public class ForceDirectedActivity extends AppCompatActivity {
                 .map(dataset -> {
                     List<Long> nodeIds = ListUtils.map(dataset, Node::getId);
                     List<ForceConnectedNode> connectedNodes = new ArrayList<>();
-                    for (Node node : dataset) {
+                    for (int i = 0; i < dataset.size(); i++) {
+                        Node node = dataset.get(i);
                         List<Long> neighbourNodeIds = getConnectedNodes(dbHelper, node.getId());
                         List<Integer> neighbourIndexes = ListUtils.map(neighbourNodeIds, nodeIds::indexOf);
-                        ForceConnectedNode connectedNode = new ForceConnectedNode(neighbourIndexes, random.nextFloat(), random.nextFloat());
+                        ForceConnectedNode connectedNode = new ForceConnectedNode(i, neighbourIndexes, random.nextFloat(), random.nextFloat());
                         connectedNodes.add(connectedNode);
                     }
                     return connectedNodes;

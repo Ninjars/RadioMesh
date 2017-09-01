@@ -3,13 +3,15 @@ package com.ninjarific.radiomesh.ui.clusters;
 import java.util.List;
 
 public class ForceConnectedNode {
+    private final int index;
     private List<Integer> neighbours;
     private float x;
     private float y;
     private double dx;
     private double dy;
 
-    public ForceConnectedNode(List<Integer> neighbours, float x, float y) {
+    public ForceConnectedNode(int i, List<Integer> neighbours, float x, float y) {
+        this.index = i;
         this.neighbours = neighbours;
         this.x = x;
         this.y = y;
@@ -40,5 +42,9 @@ public class ForceConnectedNode {
     public void updatePosition(double forceFactor) {
         x = (float) (x + dx * forceFactor);
         y = (float) (y + dy * forceFactor);
+    }
+
+    public int getIndex() {
+        return index;
     }
 }

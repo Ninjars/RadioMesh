@@ -11,6 +11,9 @@ import android.util.AttributeSet;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 
+import com.ninjarific.radiomesh.utils.listutils.ListUtils;
+
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -33,10 +36,11 @@ public class ForceDirectedView extends SurfaceView implements Runnable {
     private Thread updateThread;
     private Paint pointPaint;
     private Paint linePaint;
-    private List<ForceConnectedNode> dataset = Collections.emptyList();
+    private List<ForceConnectedNode> datasetNodes = Collections.emptyList();
+    private List<ForceConnection> uniqueConnections = Collections.emptyList();
     private SurfaceHolder holder;
-    private int viewWidth;
 
+    private int viewWidth;
     private int viewHeight;
 
     public ForceDirectedView(Context context, @Nullable AttributeSet attrs) {
@@ -80,7 +84,14 @@ public class ForceDirectedView extends SurfaceView implements Runnable {
 
     public void setData(List<ForceConnectedNode> nodes) {
         Timber.d("data: " + nodes);
-        this.dataset = nodes;
+        this.datasetNodes = nodes;
+        uniqueConnections = ListUtils.mapReduce(nodes, new ArrayList<>(),
+                (node) -> ListUtils.map(node.getNeighbours(),
+                        neighbourIndex -> new ForceConnection(node.getIndex(), neighbourIndex)),
+                (currentConnections, newConnections) -> {
+                    currentConnections.addAll(ListUtils.filter(newConnections, connection -> !currentConnections.contains(connection)));
+                    return currentConnections;
+                });
     }
 
     @Override
@@ -91,32 +102,29 @@ public class ForceDirectedView extends SurfaceView implements Runnable {
     }
 
     private void performStateUpdate() {
-        for (ForceConnectedNode node : dataset) {
-            List<Integer> neighbours = node.getNeighbours();
-            for (int neighbourIndex : neighbours) {
-                ForceConnectedNode neighbour = dataset.get(neighbourIndex);
-                // TODO: optimise to avoid calculating force twice for every pair
-                double dx = neighbour.getX() - node.getX();
-                double dy = neighbour.getY() - node.getY();
-                double distance = Math.sqrt(dx * dx + dy * dy);
-                if (distance == 0) {
-                    continue;
-                }
+        for (ForceConnection connection : uniqueConnections) {
+            ForceConnectedNode nodeA = datasetNodes.get(connection.from);
+            ForceConnectedNode nodeB = datasetNodes.get(connection.to);
 
-                double force = SPRING_FACTOR * Math.log(distance / SPRING_DIVISOR);
-                double scaleFactor = Math.min(5, force / distance);
-                double fx = scaleFactor * dx;
-                double fy = scaleFactor * dy;
-                node.addForce(fx, fy);
+            double dx = nodeB.getX() - nodeA.getX();
+            double dy = nodeB.getY() - nodeA.getY();
+            double distance = Math.sqrt(dx * dx + dy * dy);
+            if (distance == 0) {
+                continue;
             }
-            for (int i = 0; i < dataset.size(); i++) {
-                if (neighbours.contains(i)) {
-                    continue;
-                }
-                ForceConnectedNode otherNode = dataset.get(i);
-                if (otherNode == node) {
-                    continue;
-                }
+
+            double force = SPRING_FACTOR * Math.log(distance / SPRING_DIVISOR);
+            double scaleFactor = Math.min(5, force / distance);
+            double fx = scaleFactor * dx;
+            double fy = scaleFactor * dy;
+            nodeA.addForce(fx, fy);
+        }
+        for (int i = 0; i < datasetNodes.size(); i++) {
+            ForceConnectedNode node = datasetNodes.get(i);
+
+            for (int j = 0; j < datasetNodes.size(); j++) {
+                if (i == j || node.getNeighbours().contains(j)) continue;
+                ForceConnectedNode otherNode = datasetNodes.get(j);
                 double dx = otherNode.getX() - node.getX();
                 double dy = otherNode.getY() - node.getY();
                 double distanceSquared = dx * dx + dy * dy;
@@ -131,7 +139,7 @@ public class ForceDirectedView extends SurfaceView implements Runnable {
             }
         }
         nodeBounds.set(Float.MAX_VALUE, Float.MAX_VALUE, Float.MIN_VALUE, Float.MIN_VALUE);
-        for (ForceConnectedNode node : dataset) {
+        for (ForceConnectedNode node : datasetNodes) {
             node.updatePosition(FORCE_FACTOR);
             node.clearForce();
             updateNodeBounds(node, nodeBounds);
@@ -179,7 +187,7 @@ public class ForceDirectedView extends SurfaceView implements Runnable {
     public void run() {
         Timber.d("run()");
         while (isRunning) {
-            if (!holder.getSurface().isValid() || dataset.isEmpty() || viewWidth == 0) {
+            if (!holder.getSurface().isValid() || datasetNodes.isEmpty() || viewWidth == 0) {
                 // don't drawn if it's not ready
                 continue;
             }
@@ -192,7 +200,7 @@ public class ForceDirectedView extends SurfaceView implements Runnable {
             Canvas canvas = holder.lockCanvas();
             if (canvas != null) {
                 // draw
-                drawVisualisation(dataset, pointPaint, linePaint, viewWidth, viewHeight, CIRCLE_RADIUS, canvas);
+                drawVisualisation(datasetNodes, pointPaint, linePaint, viewWidth, viewHeight, CIRCLE_RADIUS, canvas);
                 holder.unlockCanvasAndPost(canvas);
             }
 

@@ -120,4 +120,12 @@ public class ListUtils {
         }
         return current;
     }
+
+    public static <T, S> S mapReduce(List<T> list, S initialValue, Mapper<T, S> mapper, Reducer<S> reducer) {
+        S current = initialValue;
+        for (T item : list) {
+            current = reducer.reduce(current, mapper.map(item));
+        }
+        return current;
+    }
 }
