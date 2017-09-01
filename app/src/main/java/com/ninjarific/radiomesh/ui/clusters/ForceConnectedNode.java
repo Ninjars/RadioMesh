@@ -38,7 +38,7 @@ public class ForceConnectedNode {
     }
 
     public void updatePosition(double forceFactor) {
-        x = (float) Math.max(0, Math.min(1, x + dx * forceFactor));
-        y = (float) Math.max(0, Math.min(1, y + dy * forceFactor));
+        x = (float) (x + dx * forceFactor);
+        y = (float) (y + dy * forceFactor);
     }
 }
