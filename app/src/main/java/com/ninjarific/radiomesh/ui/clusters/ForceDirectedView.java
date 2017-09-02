@@ -28,8 +28,10 @@ public class ForceDirectedView extends SurfaceView implements Runnable {
     private static final double SPRING_DIVISOR = 0.1;
     private static final double REPEL_FACTOR = 0.5;
     private static final double FORCE_FACTOR = 0.1;
+    private static final float SCREEN_PADDING_PX = 16;
 
     private static RectF nodeBounds = new RectF();
+    private static RectF viewBounds = new RectF();
     private static Matrix matrix = new Matrix();
     private boolean isRunning = false;
 
@@ -99,6 +101,7 @@ public class ForceDirectedView extends SurfaceView implements Runnable {
         super.onSizeChanged(w, h, oldw, oldh);
         viewWidth = w;
         viewHeight = h;
+        viewBounds = new RectF(SCREEN_PADDING_PX, SCREEN_PADDING_PX, w - 2*SCREEN_PADDING_PX, h - 2*SCREEN_PADDING_PX);
     }
 
     private void performStateUpdate() {
@@ -165,10 +168,9 @@ public class ForceDirectedView extends SurfaceView implements Runnable {
                                           Paint radioPaint, Paint linePaint, int viewWidth, int viewHeight,
                                           float nodeRadius, Canvas canvas) {
         canvas.drawColor(Color.argb(255, 31, 31, 31));
-        float scaleFactor = Math.max((float) viewWidth / nodeBounds.width(), (float) viewHeight / nodeBounds.height());
-        matrix.preTranslate(-nodeBounds.left - nodeBounds.width() / 2f, -nodeBounds.top - nodeBounds.height() / 2f);
-        matrix.setScale(scaleFactor/2, scaleFactor/2);
-        matrix.postTranslate(viewWidth / 2, viewHeight / 2);
+        matrix.reset();
+        float scaleFactor = Math.min((float) viewWidth / nodeBounds.width(), (float) viewHeight / nodeBounds.height());
+        matrix.setRectToRect(nodeBounds, viewBounds, Matrix.ScaleToFit.CENTER);
         canvas.setMatrix(matrix);
         linePaint.setStrokeWidth(1f / scaleFactor);
         float drawRadius = nodeRadius / scaleFactor;
