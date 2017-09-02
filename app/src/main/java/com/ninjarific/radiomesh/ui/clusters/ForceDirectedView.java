@@ -94,6 +94,9 @@ public class ForceDirectedView extends SurfaceView implements Runnable {
                     currentConnections.addAll(ListUtils.filter(newConnections, connection -> !currentConnections.contains(connection)));
                     return currentConnections;
                 });
+        nodeBounds.set(Float.MAX_VALUE, Float.MAX_VALUE, Float.MIN_VALUE, Float.MIN_VALUE);
+        ListUtils.foreach(datasetNodes, node -> updateNodeBounds(node, nodeBounds));
+
     }
 
     @Override
@@ -109,8 +112,8 @@ public class ForceDirectedView extends SurfaceView implements Runnable {
             ForceConnectedNode nodeA = datasetNodes.get(connection.from);
             ForceConnectedNode nodeB = datasetNodes.get(connection.to);
 
-            double dx = nodeB.getX() - nodeA.getX();
-            double dy = nodeB.getY() - nodeA.getY();
+            double dx = (nodeB.getX() - nodeA.getX()) / nodeBounds.width();
+            double dy = (nodeB.getY() - nodeA.getY()) / nodeBounds.height();
             double distance = Math.sqrt(dx * dx + dy * dy);
             if (distance == 0) {
                 continue;
@@ -128,8 +131,8 @@ public class ForceDirectedView extends SurfaceView implements Runnable {
             for (int j = 0; j < datasetNodes.size(); j++) {
                 if (i == j || node.getNeighbours().contains(j)) continue;
                 ForceConnectedNode otherNode = datasetNodes.get(j);
-                double dx = otherNode.getX() - node.getX();
-                double dy = otherNode.getY() - node.getY();
+                double dx = (otherNode.getX() - node.getX()) / nodeBounds.width();
+                double dy = (otherNode.getY() - node.getY()) / nodeBounds.height();
                 double distanceSquared = dx * dx + dy * dy;
                 if (distanceSquared == 0) {
                     continue;
