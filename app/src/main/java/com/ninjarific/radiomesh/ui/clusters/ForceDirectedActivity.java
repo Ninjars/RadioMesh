@@ -3,6 +3,7 @@ package com.ninjarific.radiomesh.ui.clusters;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
+import android.view.View;
 
 import com.ninjarific.radiomesh.MainApplication;
 import com.ninjarific.radiomesh.R;
@@ -28,12 +29,14 @@ public class ForceDirectedActivity extends AppCompatActivity {
     private long graphIndex;
     private Random random;
     private Disposable disposable;
+    private View loadingSpinner;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_clusters);
         view = findViewById(R.id.clusters_view);
+        loadingSpinner = findViewById(R.id.loading_spinner);
         random = new Random(0);
         graphIndex = getIntent().getExtras().getLong(BUNDLE_GRAPH_ID, 1);
     }
@@ -62,6 +65,7 @@ public class ForceDirectedActivity extends AppCompatActivity {
                 })
                 .subscribeOn(Schedulers.computation())
                 .observeOn(AndroidSchedulers.mainThread())
+                .doOnNext(nodes -> loadingSpinner.setVisibility(View.GONE))
                 .subscribe(connectedNodes -> view.setData(connectedNodes),
                         Throwable::printStackTrace);
     }
