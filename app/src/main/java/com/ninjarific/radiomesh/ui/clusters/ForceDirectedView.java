@@ -8,8 +8,7 @@ import android.graphics.Paint;
 import android.graphics.RectF;
 import android.support.annotation.Nullable;
 import android.util.AttributeSet;
-import android.view.SurfaceHolder;
-import android.view.SurfaceView;
+import android.view.View;
 
 import com.ninjarific.radiomesh.utils.listutils.ListUtils;
 
@@ -20,30 +19,32 @@ import java.util.List;
 import timber.log.Timber;
 
 
-public class ForceDirectedView extends SurfaceView implements Runnable {
+public class ForceDirectedView extends View {
     private static final int MAX_FPS = 40; //desired fps
     private static final int FRAME_PERIOD = 1000 / MAX_FPS; // the frame period
     private static final float CIRCLE_RADIUS = 8f;
     private static final double SPRING_FACTOR = 1;
     private static final double SPRING_DIVISOR = 0.1;
-    private static final double REPEL_FACTOR = 0.5;
+    private static final double REPEL_FACTOR = 0.25;
     private static final double FORCE_FACTOR = 0.1;
     private static final float SCREEN_PADDING_PX = 16;
 
     private static RectF nodeBounds = new RectF();
     private static RectF viewBounds = new RectF();
     private static Matrix matrix = new Matrix();
-    private boolean isRunning = false;
 
-    private Thread updateThread;
     private Paint pointPaint;
     private Paint linePaint;
     private List<ForceConnectedNode> datasetNodes = Collections.emptyList();
     private List<ForceConnection> uniqueConnections = Collections.emptyList();
-    private SurfaceHolder holder;
 
     private int viewWidth;
     private int viewHeight;
+
+    public ForceDirectedView(Context context) {
+        super(context);
+        init();
+    }
 
     public ForceDirectedView(Context context, @Nullable AttributeSet attrs) {
         super(context, attrs);
@@ -63,29 +64,19 @@ public class ForceDirectedView extends SurfaceView implements Runnable {
         linePaint = new Paint();
         linePaint.setStyle(Paint.Style.STROKE);
         linePaint.setStrokeWidth(1);
-        linePaint.setARGB(150, 175, 175, 175);
+        linePaint.setARGB(100, 170, 170, 170);
         linePaint.setAntiAlias(true);
+    }
 
-        holder = getHolder();
-        holder.addCallback(new SurfaceHolder.Callback() {
-            @Override
-            public void surfaceCreated(SurfaceHolder surfaceHolder) {
-            }
-
-            @Override
-            public void surfaceChanged(SurfaceHolder surfaceHolder, int format, int width, int height) {
-                ForceDirectedView.this.viewWidth = width;
-                ForceDirectedView.this.viewHeight = height;
-            }
-
-            @Override
-            public void surfaceDestroyed(SurfaceHolder surfaceHolder) {
-            }
-        });
+    @Override
+    protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
+        super.onMeasure(widthMeasureSpec, heightMeasureSpec);
+        ForceDirectedView.this.viewWidth = MeasureSpec.getSize(widthMeasureSpec);
+        ForceDirectedView.this.viewHeight = MeasureSpec.getSize(heightMeasureSpec);
     }
 
     public void setData(List<ForceConnectedNode> nodes) {
-        Timber.d("data: " + nodes);
+        Timber.i("data: " + nodes);
         this.datasetNodes = nodes;
         uniqueConnections = ListUtils.mapReduce(nodes, new ArrayList<>(),
                 (node) -> ListUtils.map(node.getNeighbours(),
@@ -96,7 +87,7 @@ public class ForceDirectedView extends SurfaceView implements Runnable {
                 });
         nodeBounds.set(Float.MAX_VALUE, Float.MAX_VALUE, Float.MIN_VALUE, Float.MIN_VALUE);
         ListUtils.foreach(datasetNodes, node -> updateNodeBounds(node, nodeBounds));
-
+        invalidate();
     }
 
     @Override
@@ -180,76 +171,57 @@ public class ForceDirectedView extends SurfaceView implements Runnable {
         for (ForceConnectedNode node : dataset) {
             float x = node.getX();
             float y = node.getY();
-            canvas.drawCircle(x, y, drawRadius, radioPaint);
             for (int neighbourIndex : node.getNeighbours()) {
                 ForceConnectedNode b = dataset.get(neighbourIndex);
                 canvas.drawLine(x, y, b.getX(), b.getY(), linePaint);
             }
         }
+        for (ForceConnectedNode node : dataset) {
+            float x = node.getX();
+            float y = node.getY();
+            canvas.drawCircle(x, y, drawRadius, radioPaint);
+        }
     }
 
     @Override
-    public void run() {
-        Timber.d("run()");
-        while (isRunning) {
-            if (!holder.getSurface().isValid() || datasetNodes.isEmpty() || viewWidth == 0) {
-                // don't drawn if it's not ready
-                continue;
-            }
+    protected void onDraw(Canvas canvas) {
+        super.onDraw(canvas);
+        if (datasetNodes.isEmpty() || viewWidth == 0) {
+            // don't drawn if it's not ready
+            return;
+        }
 
-            long started = System.currentTimeMillis();
+        long started = System.currentTimeMillis();
 
-            // update state
-            performStateUpdate();
+        // update state
+        performStateUpdate();
 
-            Canvas canvas = holder.lockCanvas();
-            if (canvas != null) {
-                // draw
-                drawVisualisation(datasetNodes, pointPaint, linePaint, viewWidth, viewHeight, CIRCLE_RADIUS, canvas);
-                holder.unlockCanvasAndPost(canvas);
-            }
+        if (canvas != null) {
+            // draw
+            drawVisualisation(datasetNodes, pointPaint, linePaint, viewWidth, viewHeight, CIRCLE_RADIUS, canvas);
+        }
 
-            long lastCheck = System.currentTimeMillis();
-            long deltaTime = Math.min(lastCheck - started, 1000);
-            long sleepTime = FRAME_PERIOD - deltaTime;
-            if (sleepTime > 0) {
-                long currentSleep = 0;
-                while (currentSleep < sleepTime) {
-                    try {
-                        Thread.sleep(1);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                    long current = System.currentTimeMillis();
-                    currentSleep += current - lastCheck;
-                    lastCheck = current;
+        long lastCheck = System.currentTimeMillis();
+        long deltaTime = Math.min(lastCheck - started, 1000);
+        long sleepTime = FRAME_PERIOD - deltaTime;
+        if (sleepTime > 0) {
+            long currentSleep = 0;
+            while (currentSleep < sleepTime) {
+                try {
+                    Thread.sleep(1);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
                 }
-            } else if (sleepTime < 0) {
-                while (sleepTime < 0) {
-                    performStateUpdate();
-                    sleepTime += FRAME_PERIOD;
-                }
+                long current = System.currentTimeMillis();
+                currentSleep += current - lastCheck;
+                lastCheck = current;
+            }
+        } else if (sleepTime < 0) {
+            while (sleepTime < 0) {
+                performStateUpdate();
+                sleepTime += FRAME_PERIOD;
             }
         }
-        Timber.d("run ended");
-    }
-
-    public void pause() {
-        isRunning = false;
-        boolean retry = true;
-        while (retry) {
-            try {
-                updateThread.join();
-                retry = false;
-            } catch (InterruptedException e) {
-                // try again shutting down the thread
-            }
-        }
-    }
-
-    public void resume() {
-        isRunning = true;
-        updateThread = new Thread(this);
-        updateThread.start();
+        invalidate();
     }
 }

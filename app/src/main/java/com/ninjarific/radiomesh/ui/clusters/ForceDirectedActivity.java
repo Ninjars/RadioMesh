@@ -39,18 +39,6 @@ public class ForceDirectedActivity extends AppCompatActivity {
     }
 
     @Override
-    protected void onResume() {
-        super.onResume();
-        view.resume();
-    }
-
-    @Override
-    protected void onPause() {
-        view.pause();
-        super.onPause();
-    }
-
-    @Override
     protected void onStart() {
         super.onStart();
         DatabaseHelper dbHelper = MainApplication.getDatabaseHelper();
@@ -67,14 +55,15 @@ public class ForceDirectedActivity extends AppCompatActivity {
                         Node node = dataset.get(i);
                         List<Long> neighbourNodeIds = getConnectedNodes(dbHelper, node.getId());
                         List<Integer> neighbourIndexes = ListUtils.map(neighbourNodeIds, nodeIds::indexOf);
-                        ForceConnectedNode connectedNode = new ForceConnectedNode(i, neighbourIndexes, random.nextFloat(), random.nextFloat());
+                        ForceConnectedNode connectedNode = new ForceConnectedNode(i, neighbourIndexes, random.nextFloat() * 100, random.nextFloat() * 100);
                         connectedNodes.add(connectedNode);
                     }
                     return connectedNodes;
                 })
                 .subscribeOn(Schedulers.computation())
                 .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(connectedNodes -> view.setData(connectedNodes));
+                .subscribe(connectedNodes -> view.setData(connectedNodes),
+                        Throwable::printStackTrace);
     }
 
     private static List<Long> getConnectedNodes(DatabaseHelper dbHelper, long nodeId) {
