@@ -1,15 +1,14 @@
 package com.ninjarific.radiomesh.ui.clusters;
 
-public class ForceHelper {
+class ForceHelper {
     private static final double MAX_FORCE_DISTANCE = 100;
     private static final double MAX_STEP_DISTANCE = 10;
     private static final double SPRING_FACTOR = 0.5;
     private static final double SPRING_DIVISOR = 0.1;
     private static final double REPEL_FACTOR = 0.25;
-    private static final double FORCE_FACTOR = 0.1;
 
-    public static void applyAttractionBetweenNodes(ForceConnectedNode nodeA, ForceConnectedNode nodeB) {
-        // normalise dx and dy
+    static void applyAttractionBetweenNodes(ForceConnectedNode nodeA, ForceConnectedNode nodeB) {
+        // normalise dx and dy to a fixed value
         double dx = Math.min(1, (nodeB.getX() - nodeA.getX()) / MAX_FORCE_DISTANCE);
         double dy = Math.min(1, (nodeB.getY() - nodeA.getY()) / MAX_FORCE_DISTANCE);
         double distance = Math.sqrt(dx * dx + dy * dy);
@@ -24,7 +23,8 @@ public class ForceHelper {
         nodeB.addForce(-fx, -fy);
     }
 
-    public static void applyRepulsionBetweenNodes(ForceConnectedNode nodeA, ForceConnectedNode nodeB) {
+    static void applyRepulsionBetweenNodes(ForceConnectedNode nodeA, ForceConnectedNode nodeB) {
+        // normalise dx and dy to a fixed value
         double dx = Math.min(1, (nodeB.getX() - nodeA.getX()) / MAX_FORCE_DISTANCE);
         double dy = Math.min(1, (nodeB.getY() - nodeA.getY()) / MAX_FORCE_DISTANCE);
         double distanceSquared = dx * dx + dy * dy;
