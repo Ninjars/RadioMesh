@@ -43,7 +43,7 @@ public interface NodeDao {
     List<Long> insertAll(List<Node> entities);
 
     @Update
-    void updateNodes(List<Node> entities);
+    int updateNodes(List<Node> entities);
 
     @Delete
     void delete(Node entity);
