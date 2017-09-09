@@ -14,18 +14,15 @@ import com.ninjarific.radiomesh.utils.listutils.ListUtils;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 
 import timber.log.Timber;
-
 
 public class ForceDirectedView extends View {
     private static final int MAX_FPS = 40; //desired fps
     private static final int FRAME_PERIOD = 1000 / MAX_FPS; // the frame period
     private static final float CIRCLE_RADIUS = 8f;
-    private static final double SPRING_FACTOR = 1;
-    private static final double SPRING_DIVISOR = 0.1;
-    private static final double REPEL_FACTOR = 0.25;
     private static final double FORCE_FACTOR = 0.1;
     private static final float SCREEN_PADDING_PX = 16;
 
@@ -37,6 +34,7 @@ public class ForceDirectedView extends View {
     private Paint linePaint;
     private List<ForceConnectedNode> datasetNodes = Collections.emptyList();
     private List<ForceConnection> uniqueConnections = Collections.emptyList();
+    private List<ForceConnection> uniqueRepulsions = Collections.emptyList();
 
     private int viewWidth;
     private int viewHeight;
@@ -85,6 +83,16 @@ public class ForceDirectedView extends View {
                     currentConnections.addAll(ListUtils.filter(newConnections, connection -> !currentConnections.contains(connection)));
                     return currentConnections;
                 });
+        HashSet<ForceConnection> repulsions = new HashSet<>();
+        for (int i = 0; i < datasetNodes.size(); i++) {
+            ForceConnectedNode node = datasetNodes.get(i);
+            for (int j = 0; j < datasetNodes.size(); j++) {
+                if (i != j && node.getNeighbours().contains(j)) {
+                    repulsions.add(new ForceConnection(i, j));
+                }
+            }
+        }
+        uniqueRepulsions = new ArrayList<>(repulsions);
         nodeBounds.set(Float.MAX_VALUE, Float.MAX_VALUE, Float.MIN_VALUE, Float.MIN_VALUE);
         ListUtils.foreach(datasetNodes, node -> updateNodeBounds(node, nodeBounds));
         invalidate();
@@ -102,38 +110,12 @@ public class ForceDirectedView extends View {
         for (ForceConnection connection : uniqueConnections) {
             ForceConnectedNode nodeA = datasetNodes.get(connection.from);
             ForceConnectedNode nodeB = datasetNodes.get(connection.to);
-
-            double dx = (nodeB.getX() - nodeA.getX()) / nodeBounds.width();
-            double dy = (nodeB.getY() - nodeA.getY()) / nodeBounds.height();
-            double distance = Math.sqrt(dx * dx + dy * dy);
-            if (distance == 0) {
-                continue;
-            }
-
-            double force = SPRING_FACTOR * Math.log(distance / SPRING_DIVISOR);
-            double scaleFactor = Math.min(5, force / distance);
-            double fx = scaleFactor * dx;
-            double fy = scaleFactor * dy;
-            nodeA.addForce(fx, fy);
+            ForceHelper.applyAttractionBetweenNodes(nodeA, nodeB);
         }
-        for (int i = 0; i < datasetNodes.size(); i++) {
-            ForceConnectedNode node = datasetNodes.get(i);
-
-            for (int j = 0; j < datasetNodes.size(); j++) {
-                if (i == j || node.getNeighbours().contains(j)) continue;
-                ForceConnectedNode otherNode = datasetNodes.get(j);
-                double dx = (otherNode.getX() - node.getX()) / nodeBounds.width();
-                double dy = (otherNode.getY() - node.getY()) / nodeBounds.height();
-                double distanceSquared = dx * dx + dy * dy;
-                if (distanceSquared == 0) {
-                    continue;
-                }
-                double force = REPEL_FACTOR / distanceSquared;
-                double scaleFactor = Math.min(5, force / Math.sqrt(distanceSquared));
-                double fx = -scaleFactor * dx;
-                double fy = -scaleFactor * dy;
-                node.addForce(fx, fy);
-            }
+        for (ForceConnection connection : uniqueRepulsions) {
+            ForceConnectedNode nodeA = datasetNodes.get(connection.from);
+            ForceConnectedNode nodeB = datasetNodes.get(connection.to);
+            ForceHelper.applyRepulsionBetweenNodes(nodeA, nodeB);
         }
         nodeBounds.set(Float.MAX_VALUE, Float.MAX_VALUE, Float.MIN_VALUE, Float.MIN_VALUE);
         for (ForceConnectedNode node : datasetNodes) {
