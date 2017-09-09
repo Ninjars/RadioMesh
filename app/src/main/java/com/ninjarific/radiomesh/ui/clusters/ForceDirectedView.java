@@ -32,9 +32,11 @@ public class ForceDirectedView extends View {
 
     private Paint pointPaint;
     private Paint linePaint;
+    private Paint repulsionLinePaint;
     private List<ForceConnectedNode> datasetNodes = Collections.emptyList();
     private List<ForceConnection> uniqueConnections = Collections.emptyList();
     private List<ForceConnection> uniqueRepulsions = Collections.emptyList();
+    private boolean debugDraw;
 
     private int viewWidth;
     private int viewHeight;
@@ -54,6 +56,61 @@ public class ForceDirectedView extends View {
         init();
     }
 
+    private static void updateNodeBounds(ForceConnectedNode node, RectF nodeBounds) {
+        if (node.getX() < nodeBounds.left) {
+            nodeBounds.left = node.getX();
+        }
+        if (node.getY() < nodeBounds.top) {
+            nodeBounds.top = node.getY();
+        }
+        if (node.getX() > nodeBounds.right) {
+            nodeBounds.right = node.getX();
+        }
+        if (node.getY() > nodeBounds.bottom) {
+            nodeBounds.bottom = node.getY();
+        }
+    }
+
+    private static void drawVisualisation(List<ForceConnectedNode> datasetNodes,
+                                          List<ForceConnection> uniqueConnections,
+                                          List<ForceConnection> uniqueRepulsions,
+                                          Paint radioPaint, Paint connectionLinePaint, Paint repulsionLinePaint,
+                                          int viewWidth, int viewHeight,
+                                          float nodeRadius, Canvas canvas, boolean debugDraw) {
+        canvas.drawColor(Color.argb(255, 31, 31, 31));
+        matrix.reset();
+        float scaleFactor = Math.min((float) viewWidth / nodeBounds.width(), (float) viewHeight / nodeBounds.height());
+        matrix.setRectToRect(nodeBounds, viewBounds, Matrix.ScaleToFit.CENTER);
+        canvas.setMatrix(matrix);
+        connectionLinePaint.setStrokeWidth(1f / scaleFactor);
+        if (debugDraw) {
+            for (ForceConnection node : uniqueRepulsions) {
+                ForceConnectedNode nodeA = datasetNodes.get(node.from);
+                ForceConnectedNode nodeB = datasetNodes.get(node.to);
+                float ax = nodeA.getX();
+                float ay = nodeA.getY();
+                float bx = nodeB.getX();
+                float by = nodeB.getY();
+                canvas.drawLine(ax, ay, bx, by, repulsionLinePaint);
+            }
+        }
+        for (ForceConnection node : uniqueConnections) {
+            ForceConnectedNode nodeA = datasetNodes.get(node.from);
+            ForceConnectedNode nodeB = datasetNodes.get(node.to);
+            float ax = nodeA.getX();
+            float ay = nodeA.getY();
+            float bx = nodeB.getX();
+            float by = nodeB.getY();
+            canvas.drawLine(ax, ay, bx, by, connectionLinePaint);
+        }
+        float drawRadius = nodeRadius / scaleFactor;
+        for (ForceConnectedNode node : datasetNodes) {
+            float x = node.getX();
+            float y = node.getY();
+            canvas.drawCircle(x, y, drawRadius, radioPaint);
+        }
+    }
+
     private void init() {
         pointPaint = new Paint();
         pointPaint.setARGB(200, 225, 225, 225);
@@ -64,6 +121,19 @@ public class ForceDirectedView extends View {
         linePaint.setStrokeWidth(1);
         linePaint.setARGB(100, 170, 170, 170);
         linePaint.setAntiAlias(true);
+
+        repulsionLinePaint = new Paint();
+        repulsionLinePaint.setStyle(Paint.Style.STROKE);
+        repulsionLinePaint.setStrokeWidth(0.5f);
+        repulsionLinePaint.setARGB(50, 230, 150, 150);
+        repulsionLinePaint.setAntiAlias(true);
+    }
+
+    /**
+     * Call this to turn on "helpful" extra lines :D
+     */
+    public void enableDebugDraw() {
+        debugDraw = true;
     }
 
     @Override
@@ -76,22 +146,22 @@ public class ForceDirectedView extends View {
     public void setData(List<ForceConnectedNode> nodes) {
         Timber.i("data: " + nodes);
         this.datasetNodes = nodes;
-        uniqueConnections = ListUtils.mapReduce(nodes, new ArrayList<>(),
-                (node) -> ListUtils.map(node.getNeighbours(),
-                        neighbourIndex -> new ForceConnection(node.getIndex(), neighbourIndex)),
-                (currentConnections, newConnections) -> {
-                    currentConnections.addAll(ListUtils.filter(newConnections, connection -> !currentConnections.contains(connection)));
-                    return currentConnections;
-                });
-        HashSet<ForceConnection> repulsions = new HashSet<>();
+        final HashSet<ForceConnection> connections = new HashSet<>();
+        final HashSet<ForceConnection> repulsions = new HashSet<>();
         for (int i = 0; i < datasetNodes.size(); i++) {
             ForceConnectedNode node = datasetNodes.get(i);
             for (int j = 0; j < datasetNodes.size(); j++) {
-                if (i != j && node.getNeighbours().contains(j)) {
+                if (i == j) {
+                    continue;
+                }
+                if (node.getNeighbours().contains(j)) {
+                    connections.add(new ForceConnection(i, j));
+                } else {
                     repulsions.add(new ForceConnection(i, j));
                 }
             }
         }
+        uniqueConnections = new ArrayList<>(connections);
         uniqueRepulsions = new ArrayList<>(repulsions);
         nodeBounds.set(Float.MAX_VALUE, Float.MAX_VALUE, Float.MIN_VALUE, Float.MIN_VALUE);
         ListUtils.foreach(datasetNodes, node -> updateNodeBounds(node, nodeBounds));
@@ -103,7 +173,7 @@ public class ForceDirectedView extends View {
         super.onSizeChanged(w, h, oldw, oldh);
         viewWidth = w;
         viewHeight = h;
-        viewBounds = new RectF(SCREEN_PADDING_PX, SCREEN_PADDING_PX, w - 2*SCREEN_PADDING_PX, h - 2*SCREEN_PADDING_PX);
+        viewBounds = new RectF(SCREEN_PADDING_PX, SCREEN_PADDING_PX, w - 2 * SCREEN_PADDING_PX, h - 2 * SCREEN_PADDING_PX);
     }
 
     private void performStateUpdate() {
@@ -125,46 +195,6 @@ public class ForceDirectedView extends View {
         }
     }
 
-    private static void updateNodeBounds(ForceConnectedNode node, RectF nodeBounds) {
-        if (node.getX() < nodeBounds.left) {
-            nodeBounds.left = node.getX();
-        }
-        if (node.getY() < nodeBounds.top) {
-            nodeBounds.top = node.getY();
-        }
-        if (node.getX() > nodeBounds.right) {
-            nodeBounds.right = node.getX();
-        }
-        if (node.getY() > nodeBounds.bottom) {
-            nodeBounds.bottom = node.getY();
-        }
-    }
-
-    private static void drawVisualisation(List<ForceConnectedNode> dataset,
-                                          Paint radioPaint, Paint linePaint, int viewWidth, int viewHeight,
-                                          float nodeRadius, Canvas canvas) {
-        canvas.drawColor(Color.argb(255, 31, 31, 31));
-        matrix.reset();
-        float scaleFactor = Math.min((float) viewWidth / nodeBounds.width(), (float) viewHeight / nodeBounds.height());
-        matrix.setRectToRect(nodeBounds, viewBounds, Matrix.ScaleToFit.CENTER);
-        canvas.setMatrix(matrix);
-        linePaint.setStrokeWidth(1f / scaleFactor);
-        float drawRadius = nodeRadius / scaleFactor;
-        for (ForceConnectedNode node : dataset) {
-            float x = node.getX();
-            float y = node.getY();
-            for (int neighbourIndex : node.getNeighbours()) {
-                ForceConnectedNode b = dataset.get(neighbourIndex);
-                canvas.drawLine(x, y, b.getX(), b.getY(), linePaint);
-            }
-        }
-        for (ForceConnectedNode node : dataset) {
-            float x = node.getX();
-            float y = node.getY();
-            canvas.drawCircle(x, y, drawRadius, radioPaint);
-        }
-    }
-
     @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
@@ -180,7 +210,7 @@ public class ForceDirectedView extends View {
 
         if (canvas != null) {
             // draw
-            drawVisualisation(datasetNodes, pointPaint, linePaint, viewWidth, viewHeight, CIRCLE_RADIUS, canvas);
+            drawVisualisation(datasetNodes, uniqueConnections, uniqueRepulsions, pointPaint, linePaint, repulsionLinePaint, viewWidth, viewHeight, CIRCLE_RADIUS, canvas, debugDraw);
         }
 
         long lastCheck = System.currentTimeMillis();
