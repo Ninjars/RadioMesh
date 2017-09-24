@@ -146,8 +146,8 @@ public class ForceDirectedView extends View {
     public void setData(List<ForceConnectedNode> nodes) {
         Timber.i("data: " + nodes);
         this.datasetNodes = nodes;
-        final HashSet<ForceConnection> connections = new HashSet<>();
-        final HashSet<ForceConnection> repulsions = new HashSet<>();
+        final HashSet<ForceConnection> connections = new HashSet<>(nodes.size());
+        final HashSet<ForceConnection> repulsions = new HashSet<>(nodes.size() * nodes.size());
         for (int i = 0; i < datasetNodes.size(); i++) {
             ForceConnectedNode node = datasetNodes.get(i);
             for (int j = 0; j < datasetNodes.size(); j++) {
