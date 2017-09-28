@@ -19,8 +19,9 @@ class ForceHelper {
         double scaleFactor = Math.min(MAX_STEP_DISTANCE, force / distance);
         double fx = scaleFactor * dx;
         double fy = scaleFactor * dy;
-        nodeA.addForce(fx, fy);
-        nodeB.addForce(-fx, -fy);
+        double weightFactor = nodeB.getWeight() / nodeA.getWeight();
+        nodeA.addForce(fx * weightFactor, fy * weightFactor);
+        nodeB.addForce(-fx / weightFactor, -fy / weightFactor);
     }
 
     static void applyRepulsionBetweenNodes(ForceConnectedNode nodeA, ForceConnectedNode nodeB) {
@@ -35,7 +36,8 @@ class ForceHelper {
         double scaleFactor = Math.min(5, force / Math.sqrt(distanceSquared));
         double fx = -scaleFactor * dx;
         double fy = -scaleFactor * dy;
-        nodeA.addForce(fx, fy);
-        nodeB.addForce(-fx, -fy);
+        double weightFactor = nodeB.getWeight() / nodeA.getWeight();
+        nodeA.addForce(fx * weightFactor, fy * weightFactor);
+        nodeB.addForce(-fx / weightFactor, -fy / weightFactor);
     }
 }

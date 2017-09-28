@@ -24,7 +24,7 @@ public class Node {
     @ColumnInfo(name = "graph_id")
     private long graphId;
     @Ignore
-    private List<Connection> connections;
+    private List<Long> neighbours;
 
     public Node() {}
 
@@ -43,12 +43,12 @@ public class Node {
         this.id = id;
     }
 
-    public List<Connection> getConnections() {
-        return connections;
+    public List<Long> getNeighbours() {
+        return neighbours;
     }
 
-    public void setConnections(List<Connection> connections) {
-        this.connections = connections;
+    public void setNeighbours(List<Long> neighbours) {
+        this.neighbours = neighbours;
     }
 
     public String getBssid() {

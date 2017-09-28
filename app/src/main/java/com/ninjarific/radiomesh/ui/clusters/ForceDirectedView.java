@@ -36,7 +36,7 @@ public class ForceDirectedView extends View {
     private List<ForceConnectedNode> datasetNodes = Collections.emptyList();
     private List<ForceConnection> uniqueConnections = Collections.emptyList();
     private List<ForceConnection> uniqueRepulsions = Collections.emptyList();
-    private boolean debugDraw;
+    private boolean debugDraw = false;
 
     private int viewWidth;
     private int viewHeight;
