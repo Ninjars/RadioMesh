@@ -36,12 +36,14 @@ public class ListUtils {
     @SuppressLint("NewApi")
     public static <T, S> List<S> map(List<T> mapList, Mapper<T, S> mapper) {
         if (buildVersionProvider.getBuildVersion() >= Build.VERSION_CODES.N) {
-            return mapList.stream().map(mapper::map).collect(Collectors.toList());
+            return mapList.stream().map(mapper::map).filter(value -> value != null).collect(Collectors.toList());
         } else {
             List<S> returnList = new ArrayList<>(mapList.size());
             //noinspection Convert2streamapi
             for (T t : mapList) {
-                returnList.add(mapper.map(t));
+                if (t != null) {
+                    returnList.add(mapper.map(t));
+                }
             }
             return returnList;
         }
@@ -50,7 +52,9 @@ public class ListUtils {
     public static <T, S> List<S> flatMap(List<T> mapList, Mapper<T, List<S>> mapper) {
         List<S> returnList = new ArrayList<>(mapList.size());
         for (T t : mapList) {
-            returnList.addAll(mapper.map(t));
+            if (t != null) {
+                returnList.addAll(mapper.map(t));
+            }
         }
         return returnList;
     }
@@ -63,6 +67,9 @@ public class ListUtils {
             List<S> returnList = new ArrayList<>();
             //noinspection Convert2streamapi
             for (T t : mapList) {
+                if (t == null) {
+                    continue;
+                }
                 S mappedVal = mapper.map(t);
                 if (condition.isTrue(mappedVal)) {
                     returnList.add(mappedVal);
@@ -80,7 +87,7 @@ public class ListUtils {
             List<T> returnList = new ArrayList<>();
             //noinspection Convert2streamapi
             for (T t : mapList) {
-                if (condition.isTrue(t)) {
+                if (t != null && condition.isTrue(t)) {
                     returnList.add(t);
                 }
             }
