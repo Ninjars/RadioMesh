@@ -6,11 +6,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class QuadTree<T extends PositionedItem> {
-    private T containedItem;
+    private static final int MAX_DEPTH = 7;
     final List<QuadTree<T>> subNodes = new ArrayList<>(4);
-
     private final RectF bounds;
     private final int depth;
+    private List<T> containedItems = new ArrayList<>();
 
     public QuadTree(int depth, RectF bounds) {
         this.depth = depth;
@@ -27,15 +27,16 @@ public class QuadTree<T extends PositionedItem> {
         if (!bounds.contains(item.getX(), item.getY())) {
             return false;
         }
-        if (subNodes.isEmpty() && containedItem == null) {
-            containedItem = item;
+        if (subNodes.isEmpty() && (containedItems.isEmpty() || depth >= MAX_DEPTH)) {
+            containedItems.add(item);
             return true;
         }
         if (subNodes.isEmpty()) {
             subDivide();
-            T tempItem = containedItem;
-            containedItem = null;
-            insert(tempItem);
+            for (T containedItem : containedItems) {
+                insert(containedItem);
+            }
+            containedItems.clear();
         }
         boolean added = false;
         for (QuadTree<T> node : subNodes) {
@@ -57,12 +58,12 @@ public class QuadTree<T extends PositionedItem> {
         subNodes.add(new QuadTree<>(childLevel, new RectF(xMid, yMid, bounds.right, bounds.bottom)));
     }
 
-    public boolean isLeaf(){
+    public boolean isLeaf() {
         return subNodes.isEmpty();
     }
 
-    public boolean isEmpty(){
-        return subNodes.isEmpty() && containedItem == null;
+    public boolean isEmpty() {
+        return subNodes.isEmpty() && containedItems.isEmpty();
     }
 
     public int depth() {
