@@ -40,7 +40,7 @@ public class ForceDirectedView extends View {
     private List<ForceConnectedNode> datasetNodes = Collections.emptyList();
     private List<ForceConnection> uniqueConnections = Collections.emptyList();
     private List<ForceConnection> uniqueRepulsions = Collections.emptyList();
-    private boolean debugDraw;
+    private boolean debugDraw = true;
 
     private int viewWidth;
     private int viewHeight;
@@ -162,6 +162,10 @@ public class ForceDirectedView extends View {
         squareBounds.set(nodeBounds.left, nodeBounds.top, nodeBounds.left + maxDim, nodeBounds.top + maxDim);
         quadTree = new QuadTree<>(0, squareBounds);
         quadTree.insertAll(datasetNodes);
+
+        for (ForceConnectedNode node : datasetNodes) {
+            ForceHelper.applyForceForNode(node, quadTree);
+        }
 
         for (ForceConnection connection : uniqueConnections) {
             ForceConnectedNode nodeA = datasetNodes.get(connection.from);

@@ -1,5 +1,6 @@
 package com.ninjarific.radiomesh.forcedirectedgraph;
 
+import android.graphics.PointF;
 import android.graphics.RectF;
 
 import java.util.ArrayList;
@@ -11,6 +12,8 @@ public class QuadTree<T extends PositionedItem> {
     private final RectF bounds;
     private final int depth;
     private List<T> containedItems = new ArrayList<>();
+    private PointF centerOfGravity;
+    private int totalContainedItemCount = -1;
 
     public QuadTree(int depth, RectF bounds) {
         this.depth = depth;
@@ -29,6 +32,7 @@ public class QuadTree<T extends PositionedItem> {
         }
         if (subNodes.isEmpty() && (containedItems.isEmpty() || depth >= MAX_DEPTH)) {
             containedItems.add(item);
+            item.setContainingLeaf(this);
             return true;
         }
         if (subNodes.isEmpty()) {
@@ -76,5 +80,43 @@ public class QuadTree<T extends PositionedItem> {
 
     public RectF getBounds() {
         return bounds;
+    }
+
+    public PointF getCenterOfGravity() {
+        if (centerOfGravity == null) {
+            List<T> allItems = new ArrayList<>();
+            for (QuadTree<T> tree : subNodes) {
+                tree.getAllContainedItems(allItems);
+            }
+            float x = 0;
+            float y = 0;
+            for (T item : allItems) {
+                x += item.getX();
+                y += item.getY();
+            }
+            x /= allItems.size();
+            y /= allItems.size();
+            centerOfGravity = new PointF(x, y);
+        }
+        return centerOfGravity;
+    }
+
+    public int getTotalContainedItemCount() {
+        if (totalContainedItemCount < 0) {
+            List<T> allItems = new ArrayList<>();
+            getAllContainedItems(allItems);
+            totalContainedItemCount = allItems.size();
+        }
+        return totalContainedItemCount;
+    }
+
+    private void getAllContainedItems(List<T> outList) {
+        if (isLeaf()){
+            outList.addAll(containedItems);
+        } else {
+            for (QuadTree<T> tree : subNodes) {
+                tree.getAllContainedItems(outList);
+            }
+        }
     }
 }
