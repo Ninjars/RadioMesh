@@ -69,4 +69,12 @@ public class QuadTree<T extends PositionedItem> {
     public int depth() {
         return depth;
     }
+
+    public List<QuadTree<T>> getSubTrees() {
+        return subNodes;
+    }
+
+    public RectF getBounds() {
+        return bounds;
+    }
 }

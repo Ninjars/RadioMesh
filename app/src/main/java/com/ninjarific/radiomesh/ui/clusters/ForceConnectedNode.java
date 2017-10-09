@@ -1,8 +1,10 @@
 package com.ninjarific.radiomesh.ui.clusters;
 
+import com.ninjarific.radiomesh.forcedirectedgraph.PositionedItem;
+
 import java.util.List;
 
-public class ForceConnectedNode {
+public class ForceConnectedNode implements PositionedItem {
     private final int index;
     private List<Integer> neighbours;
     private float x;
@@ -21,10 +23,12 @@ public class ForceConnectedNode {
         return neighbours;
     }
 
+    @Override
     public float getX() {
         return x;
     }
 
+    @Override
     public float getY() {
         return y;
     }
