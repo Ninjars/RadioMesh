@@ -5,6 +5,8 @@ import com.ninjarific.radiomesh.forcedirectedgraph.QuadTree;
 
 import java.util.List;
 
+import timber.log.Timber;
+
 public class ForceConnectedNode implements PositionedItem {
     private final int index;
     private List<Integer> neighbours;
@@ -46,8 +48,17 @@ public class ForceConnectedNode implements PositionedItem {
     }
 
     public void addForce(double fx, double fy) {
+        if (Double.isInfinite(fx) || Double.isNaN(fx)
+        || Double.isInfinite(fy) || Double.isNaN(fy)) {
+            Timber.e("urk");
+        }
         dx += fx;
         dy += fy;
+    }
+
+    public void applyForce(double fx, double fy) {
+        x += fx;
+        y += fy;
     }
 
     public void updatePosition(double forceFactor) {

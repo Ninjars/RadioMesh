@@ -37,6 +37,7 @@ public class ForceDirectedView extends View {
     private Paint linePaint;
     private Paint repulsionLinePaint;
     private Paint boundsPaint;
+    private Paint debugTextPaint;
     private List<ForceConnectedNode> datasetNodes = Collections.emptyList();
     private List<ForceConnection> uniqueConnections = Collections.emptyList();
     private List<ForceConnection> uniqueRepulsions = Collections.emptyList();
@@ -107,7 +108,12 @@ public class ForceDirectedView extends View {
         boundsPaint.setStyle(Paint.Style.STROKE);
         boundsPaint.setStrokeWidth(3f);
         boundsPaint.setARGB(100, 30, 250, 30);
-        repulsionLinePaint.setAntiAlias(true);
+        boundsPaint.setAntiAlias(true);
+
+        debugTextPaint = new Paint();
+        debugTextPaint.setTextSize(30f);
+        debugTextPaint.setARGB(100, 30, 250, 30);
+        debugTextPaint.setAntiAlias(true);
     }
 
     /**
@@ -172,11 +178,11 @@ public class ForceDirectedView extends View {
             ForceConnectedNode nodeB = datasetNodes.get(connection.to);
             ForceHelper.applyAttractionBetweenNodes(nodeA, nodeB);
         }
-        for (ForceConnection connection : uniqueRepulsions) {
-            ForceConnectedNode nodeA = datasetNodes.get(connection.from);
-            ForceConnectedNode nodeB = datasetNodes.get(connection.to);
-            ForceHelper.applyRepulsionBetweenNodes(nodeA, nodeB);
-        }
+//        for (ForceConnection connection : uniqueRepulsions) {
+//            ForceConnectedNode nodeA = datasetNodes.get(connection.from);
+//            ForceConnectedNode nodeB = datasetNodes.get(connection.to);
+//            ForceHelper.applyRepulsionBetweenNodes(nodeA, nodeB);
+//        }
         nodeBounds.set(Float.MAX_VALUE, Float.MAX_VALUE, Float.MIN_VALUE, Float.MIN_VALUE);
         for (ForceConnectedNode node : datasetNodes) {
             node.updatePosition(FORCE_FACTOR);
@@ -230,8 +236,11 @@ public class ForceDirectedView extends View {
     private void drawVisualisation(int viewWidth, int viewHeight,
                                    float nodeRadius, Canvas canvas) {
         canvas.drawColor(Color.argb(255, 31, 31, 31));
-        matrix.reset();
         float scaleFactor = Math.min((float) viewWidth / nodeBounds.width(), (float) viewHeight / nodeBounds.height());
+        if (debugDraw) {
+            canvas.drawText(String.valueOf(scaleFactor), 0, viewHeight, debugTextPaint);
+        }
+        matrix.reset();
         matrix.setRectToRect(nodeBounds, viewBounds, Matrix.ScaleToFit.CENTER);
         canvas.setMatrix(matrix);
         linePaint.setStrokeWidth(1f / scaleFactor);

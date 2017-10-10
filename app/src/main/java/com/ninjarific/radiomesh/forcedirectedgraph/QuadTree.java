@@ -119,4 +119,8 @@ public class QuadTree<T extends PositionedItem> {
             }
         }
     }
+
+    public List<T> getContainedItems() {
+        return containedItems;
+    }
 }
