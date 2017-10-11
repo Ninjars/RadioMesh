@@ -21,9 +21,12 @@ class ForceHelper {
         double dy = nodeB.getY() - nodeA.getY();
         double distance = Math.sqrt(dx * dx + dy * dy);
         if (distance < 1) {
-            return;
+            distance = 1;
         }
-        double force = Math.log(distance);// / DISTANCE_FACTOR;
+        double force = Math.log(distance) / 100;
+        if (Double.isInfinite(force) || Double.isNaN(force)) {
+            Timber.e("urk");
+        }
         if (nodeA.getIndex() == 5) {
             Timber.e("attraction force: " + force + " at " + distance);
         }
@@ -88,13 +91,18 @@ class ForceHelper {
         double distance = quadTreeDistance(leaf, tree);
         if (leafIsFar(distance, tree)) {
             if (distance < 1) {
-                return;
+                distance = 1;
             }
             // apply repulsive force
             int forceMultiplier = tree.getTotalContainedItemCount();
             double magnitude = forceMultiplier * FORCE_FACTOR * DISTANCE_FACTOR * DISTANCE_FACTOR / distance;
             double fx = getDx(leaf, tree) * magnitude;
             double fy = getDy(leaf, tree) * magnitude;
+
+            if (Double.isInfinite(fx) || Double.isNaN(fx)
+                    || Double.isInfinite(fy) || Double.isNaN(fy)) {
+                Timber.e("urk");
+            }
             for (ForceConnectedNode node : leaf.getContainedItems()) {
                 node.addForce(fx, fy);
                 if (node.getIndex() == 5) {
