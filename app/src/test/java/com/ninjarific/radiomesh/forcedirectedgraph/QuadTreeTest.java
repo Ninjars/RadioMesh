@@ -1,6 +1,7 @@
 package com.ninjarific.radiomesh.forcedirectedgraph;
 
-import android.graphics.RectF;
+import com.ninjarific.radiomesh.utils.Bounds;
+import com.ninjarific.radiomesh.utils.Coordinate;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -17,50 +18,39 @@ import static org.junit.Assert.assertTrue;
 @Config(manifest=Config.NONE)
 public class QuadTreeTest {
 
-    private final RectF rootBounds = new RectF(0, 0, 16f, 16f);
+    private final Bounds rootBounds = new Bounds(0, 0, 16f, 16f);
 
-    @Test
-    public void addItem_empty_isLeaf() throws Exception {
-        QuadTree<PositionedItem> node = new QuadTree<>(0, rootBounds);
-        node.insert(new PositionedItem() {
+    private PositionedItem createItem(float x, float y) {
+        return new PositionedItem() {
             @Override
             public float getX() {
-                return 3f;
+                return x;
             }
 
             @Override
             public float getY() {
-                return 3f;
+                return y;
             }
-        });
+
+            @Override
+            public void setContainingLeaf(QuadTree quadTree) {
+
+            }
+        };
+    }
+
+    @Test
+    public void addItem_empty_isLeaf() throws Exception {
+        QuadTree<PositionedItem> node = new QuadTree<>(0, rootBounds);
+        node.insert(createItem(3f, 3f));
         assertTrue(node.isLeaf());
     }
 
     @Test
     public void addItem_twoFar_singleDepth() throws Exception {
         QuadTree<PositionedItem> node = new QuadTree<>(0, rootBounds);
-        node.insert(new PositionedItem() {
-            @Override
-            public float getX() {
-                return 3f;
-            }
-
-            @Override
-            public float getY() {
-                return 3f;
-            }
-        });
-        node.insert(new PositionedItem() {
-            @Override
-            public float getX() {
-                return 15f;
-            }
-
-            @Override
-            public float getY() {
-                return 15f;
-            }
-        });
+        node.insert(createItem(3f, 3f));
+        node.insert(createItem(15f, 15f));
         assertFalse(node.isLeaf());
 
         List<QuadTree<PositionedItem>> subnodes = node.subNodes;
@@ -78,28 +68,8 @@ public class QuadTreeTest {
     @Test
     public void addItem_twoClose_doubleDepth() throws Exception {
         QuadTree<PositionedItem> node = new QuadTree<>(0, rootBounds);
-        node.insert(new PositionedItem() {
-            @Override
-            public float getX() {
-                return 1f;
-            }
-
-            @Override
-            public float getY() {
-                return 1f;
-            }
-        });
-        node.insert(new PositionedItem() {
-            @Override
-            public float getX() {
-                return 5f;
-            }
-
-            @Override
-            public float getY() {
-                return 5f;
-            }
-        });
+        node.insert(createItem(1f, 1f));
+        node.insert(createItem(5f, 5f));
         assertFalse(node.isLeaf());
 
         List<QuadTree<PositionedItem>> subnodes = node.subNodes;
@@ -123,4 +93,23 @@ public class QuadTreeTest {
         assertFalse(childSubnodes.get(3).isEmpty());
     }
 
+    @Test
+    public void getCenterOfGravity_singleItem() throws Exception {
+        QuadTree<PositionedItem> node = new QuadTree<>(0, rootBounds);
+        node.insert(createItem(5f, 7f));
+        Coordinate centre = node.getCenterOfGravity();
+        assertEquals(5f, centre.x, 0.001f);
+        assertEquals(7f, centre.y, 0.001f);
+    }
+
+    @Test
+    public void getCenterOfGravity_multiItem() throws Exception {
+        QuadTree<PositionedItem> node = new QuadTree<>(0, rootBounds);
+        node.insert(createItem(1f, 1f));
+        node.insert(createItem(3f, 3f));
+        node.insert(createItem(2f, 2f));
+        Coordinate centre = node.getCenterOfGravity();
+        assertEquals(2f, centre.x, 0.001f);
+        assertEquals(2f, centre.y, 0.001f);
+    }
 }

@@ -11,6 +11,7 @@ import android.util.AttributeSet;
 import android.view.View;
 
 import com.ninjarific.radiomesh.forcedirectedgraph.QuadTree;
+import com.ninjarific.radiomesh.utils.Bounds;
 import com.ninjarific.radiomesh.utils.listutils.ListUtils;
 
 import java.util.ArrayList;
@@ -24,13 +25,16 @@ public class ForceDirectedView extends View {
     private static final int MAX_FPS = 40; //desired fps
     private static final int FRAME_PERIOD = 1000 / MAX_FPS; // the frame period
     private static final float CIRCLE_RADIUS = 8f;
-    private static final double FORCE_FACTOR = 0.1;
+    private static final double FORCE_FACTOR = 1;
     private static final float SCREEN_PADDING_PX = 16;
+
+    private static final double NODE_WORLD_SIZE = 10000;
+    private static final double NODE_FORCE_FACTOR = 0.2;
+    private static final double NODE_OPTIMAL_DISTANCE = 1;
 
     private RectF viewBounds = new RectF();
     private Matrix matrix = new Matrix();
     private RectF nodeBounds = new RectF();
-    private RectF squareBounds = new RectF();
     private QuadTree<ForceConnectedNode> quadTree;
 
     private Paint pointPaint;
@@ -43,6 +47,7 @@ public class ForceDirectedView extends View {
 
     private int viewWidth;
     private int viewHeight;
+    private NodeForceCalculator forceCalculator;
 
     public ForceDirectedView(Context context) {
         super(context);
@@ -77,7 +82,7 @@ public class ForceDirectedView extends View {
     private static void drawBounds(QuadTree<ForceConnectedNode> quadTree, Canvas canvas, Paint paint) {
         if (quadTree.isLeaf()) {
             //draw
-            canvas.drawRect(quadTree.getBounds(), paint);
+            canvas.drawRect(quadTree.getBounds().asRectF(), paint);
         } else {
             for (QuadTree<ForceConnectedNode> node : quadTree.getSubTrees()) {
                 drawBounds(node, canvas, paint);
@@ -106,6 +111,8 @@ public class ForceDirectedView extends View {
         debugTextPaint.setTextSize(30f);
         debugTextPaint.setARGB(100, 30, 250, 30);
         debugTextPaint.setAntiAlias(true);
+
+        forceCalculator = new NodeForceCalculator(NODE_WORLD_SIZE, NODE_FORCE_FACTOR, NODE_OPTIMAL_DISTANCE);
     }
 
     /**
@@ -150,18 +157,20 @@ public class ForceDirectedView extends View {
 
     private void performStateUpdate() {
         float maxDim = Math.max(nodeBounds.width(), nodeBounds.height());
-        squareBounds.set(nodeBounds.left, nodeBounds.top, nodeBounds.left + maxDim, nodeBounds.top + maxDim);
+        Bounds squareBounds = new Bounds(nodeBounds.left, nodeBounds.top, nodeBounds.left + maxDim, nodeBounds.top + maxDim);
         quadTree = new QuadTree<>(0, squareBounds);
         quadTree.insertAll(datasetNodes);
 
         for (ForceConnectedNode node : datasetNodes) {
-            ForceHelper.applyForceForNode(node, quadTree);
+            forceCalculator.repelNode(node, quadTree);
+//            ForceHelper.applyForceForNode(node, quadTree);
         }
 
         for (ForceConnection connection : uniqueConnections) {
             ForceConnectedNode nodeA = datasetNodes.get(connection.from);
             ForceConnectedNode nodeB = datasetNodes.get(connection.to);
-            ForceHelper.applyAttractionBetweenNodes(nodeA, nodeB);
+            forceCalculator.attractNodes(nodeA, nodeB);
+//            ForceHelper.applyAttractionBetweenNodes(nodeA, nodeB);
         }
         nodeBounds.set(Float.MAX_VALUE, Float.MAX_VALUE, Float.MIN_VALUE, Float.MIN_VALUE);
         for (ForceConnectedNode node : datasetNodes) {
@@ -218,7 +227,8 @@ public class ForceDirectedView extends View {
         canvas.drawColor(Color.argb(255, 31, 31, 31));
         float scaleFactor = Math.min((float) viewWidth / nodeBounds.width(), (float) viewHeight / nodeBounds.height());
         if (debugDraw) {
-            canvas.drawText(String.valueOf(scaleFactor), 0, viewHeight, debugTextPaint);
+            canvas.drawText(String.valueOf(scaleFactor) + " : " +
+                    matrix.toShortString(), 0, viewHeight, debugTextPaint);
         }
         matrix.reset();
         matrix.setRectToRect(nodeBounds, viewBounds, Matrix.ScaleToFit.CENTER);

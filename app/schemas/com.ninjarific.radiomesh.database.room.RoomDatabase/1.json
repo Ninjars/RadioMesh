@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "79a117e8d26b6947731ac46018effae0",
+    "identityHash": "81ace3fea367fea41b21ce23d79c3753",
     "entities": [
       {
         "tableName": "graphs",
@@ -28,7 +28,7 @@
             "columnNames": [
               "id"
             ],
-            "createSql": "CREATE UNIQUE INDEX `index_graphs_id` ON `${TABLE_NAME}` (`id`)"
+            "createSql": "CREATE UNIQUE INDEX `index_graphs_id`\nON `${TABLE_NAME}` (`id`)"
           }
         ],
         "foreignKeys": []
@@ -75,7 +75,7 @@
             "columnNames": [
               "bssid"
             ],
-            "createSql": "CREATE UNIQUE INDEX `index_radiopoints_bssid` ON `${TABLE_NAME}` (`bssid`)"
+            "createSql": "CREATE UNIQUE INDEX `index_radiopoints_bssid`\nON `${TABLE_NAME}` (`bssid`)"
           },
           {
             "name": "index_radiopoints_graph_id",
@@ -83,7 +83,7 @@
             "columnNames": [
               "graph_id"
             ],
-            "createSql": "CREATE  INDEX `index_radiopoints_graph_id` ON `${TABLE_NAME}` (`graph_id`)"
+            "createSql": "CREATE  INDEX `index_radiopoints_graph_id`\nON `${TABLE_NAME}` (`graph_id`)"
           }
         ],
         "foreignKeys": [
@@ -137,7 +137,7 @@
               "fromNodeId",
               "toNodeId"
             ],
-            "createSql": "CREATE UNIQUE INDEX `index_connections_fromNodeId_toNodeId` ON `${TABLE_NAME}` (`fromNodeId`, `toNodeId`)"
+            "createSql": "CREATE UNIQUE INDEX `index_connections_fromNodeId_toNodeId`\nON `${TABLE_NAME}` (`fromNodeId`, `toNodeId`)"
           },
           {
             "name": "index_connections_toNodeId",
@@ -145,7 +145,7 @@
             "columnNames": [
               "toNodeId"
             ],
-            "createSql": "CREATE  INDEX `index_connections_toNodeId` ON `${TABLE_NAME}` (`toNodeId`)"
+            "createSql": "CREATE  INDEX `index_connections_toNodeId`\nON `${TABLE_NAME}` (`toNodeId`)"
           }
         ],
         "foreignKeys": [
@@ -176,7 +176,7 @@
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, \"79a117e8d26b6947731ac46018effae0\")"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, \"81ace3fea367fea41b21ce23d79c3753\")"
     ]
   }
 }

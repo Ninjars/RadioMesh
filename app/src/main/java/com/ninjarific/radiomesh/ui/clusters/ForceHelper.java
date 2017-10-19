@@ -1,9 +1,8 @@
 package com.ninjarific.radiomesh.ui.clusters;
 
-import android.graphics.PointF;
-import android.graphics.RectF;
-
 import com.ninjarific.radiomesh.forcedirectedgraph.QuadTree;
+import com.ninjarific.radiomesh.utils.Bounds;
+import com.ninjarific.radiomesh.utils.Coordinate;
 
 import timber.log.Timber;
 
@@ -116,27 +115,27 @@ class ForceHelper {
         }
     }
 
-    private static float getDx(QuadTree leaf, QuadTree tree) {
-        RectF leafBounds = leaf.getBounds();
-        PointF treeCenterOfGravity = tree.getCenterOfGravity();
+    private static double getDx(QuadTree leaf, QuadTree tree) {
+        Bounds leafBounds = leaf.getBounds();
+        Coordinate treeCenterOfGravity = tree.getCenterOfGravity();
         return leafBounds.centerX() - treeCenterOfGravity.x;
     }
 
-    private static float getDy(QuadTree leaf, QuadTree tree) {
-        RectF leafBounds = leaf.getBounds();
-        PointF treeCenterOfGravity = tree.getCenterOfGravity();
+    private static double getDy(QuadTree leaf, QuadTree tree) {
+        Bounds leafBounds = leaf.getBounds();
+        Coordinate treeCenterOfGravity = tree.getCenterOfGravity();
         return leafBounds.centerY() - treeCenterOfGravity.y;
     }
 
     private static double quadTreeDistance(QuadTree leaf, QuadTree tree) {
-        RectF leafBounds = leaf.getBounds();
-        PointF treeCenterOfGravity = tree.getCenterOfGravity();
-        float dx = leafBounds.centerX() - treeCenterOfGravity.x;
-        float dy = leafBounds.centerY() - treeCenterOfGravity.y;
+        Bounds leafBounds = leaf.getBounds();
+        Coordinate treeCenterOfGravity = tree.getCenterOfGravity();
+        double dx = leafBounds.centerX() - treeCenterOfGravity.x;
+        double dy = leafBounds.centerY() - treeCenterOfGravity.y;
         return Math.sqrt(dx * dx + dy * dy);
     }
 
     private static boolean leafIsFar(double distance, QuadTree quadTree) {
-        return quadTree.getBounds().width() / distance <= TREE_INEQUALITY;
+        return quadTree.getBounds().getWidth() / distance <= TREE_INEQUALITY;
     }
 }

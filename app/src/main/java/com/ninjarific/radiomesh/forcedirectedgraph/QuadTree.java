@@ -1,7 +1,7 @@
 package com.ninjarific.radiomesh.forcedirectedgraph;
 
-import android.graphics.PointF;
-import android.graphics.RectF;
+import com.ninjarific.radiomesh.utils.Bounds;
+import com.ninjarific.radiomesh.utils.Coordinate;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -9,13 +9,13 @@ import java.util.List;
 public class QuadTree<T extends PositionedItem> {
     private static final int MAX_DEPTH = 7;
     final List<QuadTree<T>> subNodes = new ArrayList<>(4);
-    private final RectF bounds;
+    private final Bounds bounds;
     private final int depth;
     private List<T> containedItems = new ArrayList<>();
-    private PointF centerOfGravity;
+    private Coordinate centerOfGravity;
     private int totalContainedItemCount = -1;
 
-    public QuadTree(int depth, RectF bounds) {
+    public QuadTree(int depth, Bounds bounds) {
         this.depth = depth;
         this.bounds = bounds;
     }
@@ -53,13 +53,13 @@ public class QuadTree<T extends PositionedItem> {
     }
 
     private void subDivide() {
-        float xMid = bounds.left + 0.5f * bounds.width();
-        float yMid = bounds.top + 0.5f * bounds.height();
+        double xMid = bounds.left + 0.5f * bounds.getWidth();
+        double yMid = bounds.top + 0.5f * bounds.getHeight();
         int childLevel = depth + 1;
-        subNodes.add(new QuadTree<>(childLevel, new RectF(bounds.left, bounds.top, xMid, yMid)));
-        subNodes.add(new QuadTree<>(childLevel, new RectF(xMid, bounds.top, bounds.right, yMid)));
-        subNodes.add(new QuadTree<>(childLevel, new RectF(bounds.left, yMid, xMid, bounds.bottom)));
-        subNodes.add(new QuadTree<>(childLevel, new RectF(xMid, yMid, bounds.right, bounds.bottom)));
+        subNodes.add(new QuadTree<>(childLevel, new Bounds(bounds.left, bounds.top, xMid, yMid)));
+        subNodes.add(new QuadTree<>(childLevel, new Bounds(xMid, bounds.top, bounds.right, yMid)));
+        subNodes.add(new QuadTree<>(childLevel, new Bounds(bounds.left, yMid, xMid, bounds.bottom)));
+        subNodes.add(new QuadTree<>(childLevel, new Bounds(xMid, yMid, bounds.right, bounds.bottom)));
     }
 
     public boolean isLeaf() {
@@ -78,13 +78,13 @@ public class QuadTree<T extends PositionedItem> {
         return subNodes;
     }
 
-    public RectF getBounds() {
+    public Bounds getBounds() {
         return bounds;
     }
 
-    public PointF getCenterOfGravity() {
+    public Coordinate getCenterOfGravity() {
         if (centerOfGravity == null) {
-            List<T> allItems = new ArrayList<>();
+            List<T> allItems = new ArrayList<>(containedItems);
             for (QuadTree<T> tree : subNodes) {
                 tree.getAllContainedItems(allItems);
             }
@@ -96,7 +96,7 @@ public class QuadTree<T extends PositionedItem> {
             }
             x /= allItems.size();
             y /= allItems.size();
-            centerOfGravity = new PointF(x, y);
+            centerOfGravity = new Coordinate(x, y);
         }
         return centerOfGravity;
     }
