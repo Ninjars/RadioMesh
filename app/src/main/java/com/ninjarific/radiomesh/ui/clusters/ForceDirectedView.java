@@ -35,12 +35,10 @@ public class ForceDirectedView extends View {
 
     private Paint pointPaint;
     private Paint linePaint;
-    private Paint repulsionLinePaint;
     private Paint boundsPaint;
     private Paint debugTextPaint;
     private List<ForceConnectedNode> datasetNodes = Collections.emptyList();
     private List<ForceConnection> uniqueConnections = Collections.emptyList();
-    private List<ForceConnection> uniqueRepulsions = Collections.emptyList();
     private boolean debugDraw = true;
 
     private int viewWidth;
@@ -98,12 +96,6 @@ public class ForceDirectedView extends View {
         linePaint.setARGB(100, 170, 170, 170);
         linePaint.setAntiAlias(true);
 
-        repulsionLinePaint = new Paint();
-        repulsionLinePaint.setStyle(Paint.Style.STROKE);
-        repulsionLinePaint.setStrokeWidth(0.5f);
-        repulsionLinePaint.setARGB(50, 230, 150, 150);
-        repulsionLinePaint.setAntiAlias(true);
-
         boundsPaint = new Paint();
         boundsPaint.setStyle(Paint.Style.STROKE);
         boundsPaint.setStrokeWidth(3f);
@@ -134,22 +126,15 @@ public class ForceDirectedView extends View {
         Timber.i("data: " + nodes);
         this.datasetNodes = nodes;
         final HashSet<ForceConnection> connections = new HashSet<>(nodes.size());
-        final HashSet<ForceConnection> repulsions = new HashSet<>(nodes.size() * nodes.size());
         for (int i = 0; i < datasetNodes.size(); i++) {
             ForceConnectedNode node = datasetNodes.get(i);
             for (int j = 0; j < datasetNodes.size(); j++) {
-                if (i == j) {
-                    continue;
-                }
-                if (node.getNeighbours().contains(j)) {
+                if (i != j && node.getNeighbours().contains(j)) {
                     connections.add(new ForceConnection(i, j));
-                } else {
-                    repulsions.add(new ForceConnection(i, j));
                 }
             }
         }
         uniqueConnections = new ArrayList<>(connections);
-        uniqueRepulsions = new ArrayList<>(repulsions);
         nodeBounds.set(Float.MAX_VALUE, Float.MAX_VALUE, Float.MIN_VALUE, Float.MIN_VALUE);
         ListUtils.foreach(datasetNodes, node -> updateNodeBounds(node, nodeBounds));
         invalidate();
@@ -178,11 +163,6 @@ public class ForceDirectedView extends View {
             ForceConnectedNode nodeB = datasetNodes.get(connection.to);
             ForceHelper.applyAttractionBetweenNodes(nodeA, nodeB);
         }
-//        for (ForceConnection connection : uniqueRepulsions) {
-//            ForceConnectedNode nodeA = datasetNodes.get(connection.from);
-//            ForceConnectedNode nodeB = datasetNodes.get(connection.to);
-//            ForceHelper.applyRepulsionBetweenNodes(nodeA, nodeB);
-//        }
         nodeBounds.set(Float.MAX_VALUE, Float.MAX_VALUE, Float.MIN_VALUE, Float.MIN_VALUE);
         for (ForceConnectedNode node : datasetNodes) {
             node.updatePosition(FORCE_FACTOR);
