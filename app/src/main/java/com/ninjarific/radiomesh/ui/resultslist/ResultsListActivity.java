@@ -19,10 +19,13 @@ import com.ninjarific.radiomesh.MainApplication;
 import com.ninjarific.radiomesh.R;
 import com.ninjarific.radiomesh.database.room.DatabaseHelper;
 import com.ninjarific.radiomesh.database.room.entities.Graph;
+import com.ninjarific.radiomesh.ui.clusters.DebugDataProvider;
 import com.ninjarific.radiomesh.ui.clusters.ForceDirectedActivity;
 import com.ninjarific.radiomesh.utils.ScanSchedulerUtil;
 import com.ninjarific.radiomesh.utils.listutils.ListUtils;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import io.reactivex.Flowable;
@@ -77,7 +80,12 @@ public class ResultsListActivity extends AppCompatActivity {
         Flowable<List<Flowable<GraphNodes>>> graphNodesFlowable = dbHelper.observeGraphs()
                 .map(graphs ->  {
                     Timber.i("graphNodesFlowable fired");
-                    return ListUtils.map(graphs, this::getGraphNodesFlowable);
+                    List<Flowable<GraphNodes>> list = new ArrayList<>();
+                    list.add(Flowable.just(new GraphNodes(DebugDataProvider.SIMPLE_PAIR, Collections.emptyList())));
+                    list.add(Flowable.just(new GraphNodes(DebugDataProvider.REGUALAR_GRID, Collections.emptyList())));
+                    list.add(Flowable.just(new GraphNodes(DebugDataProvider.INTER_CONNECTED, Collections.emptyList())));
+                    list.addAll(ListUtils.map(graphs, this::getGraphNodesFlowable));
+                    return list;
                 });
         disposable = adapter.bind(graphNodesFlowable);
 

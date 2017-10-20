@@ -38,7 +38,7 @@ public class ForceDirectedActivity extends AppCompatActivity {
         view = findViewById(R.id.clusters_view);
         loadingSpinner = findViewById(R.id.loading_spinner);
         random = new Random(0);
-        graphIndex = getIntent().getExtras().getLong(BUNDLE_GRAPH_ID, 1);
+        graphIndex = getIntent().getExtras().getLong(BUNDLE_GRAPH_ID, -1);
     }
 
     @Override
@@ -48,26 +48,32 @@ public class ForceDirectedActivity extends AppCompatActivity {
         if (disposable != null && !disposable.isDisposed()) {
             disposable.dispose();
         }
-        disposable = dbHelper.getNodesForGraphObs(graphIndex)
-                .subscribeOn(Schedulers.computation())
-                .observeOn(Schedulers.computation())
-                .map(dataset -> {
-                    List<Long> nodeIds = ListUtils.map(dataset, Node::getId);
-                    List<ForceConnectedNode> connectedNodes = new ArrayList<>();
-                    for (int i = 0; i < dataset.size(); i++) {
-                        Node node = dataset.get(i);
-                        List<Long> neighbourNodeIds = getConnectedNodes(dbHelper, node.getId());
-                        List<Integer> neighbourIndexes = ListUtils.map(neighbourNodeIds, nodeIds::indexOf);
-                        ForceConnectedNode connectedNode = new ForceConnectedNode(i, neighbourIndexes, random.nextFloat() * 100, random.nextFloat() * 100);
-                        connectedNodes.add(connectedNode);
-                    }
-                    return connectedNodes;
-                })
-                .subscribeOn(Schedulers.computation())
-                .observeOn(AndroidSchedulers.mainThread())
-                .doOnNext(nodes -> loadingSpinner.setVisibility(View.GONE))
-                .subscribe(connectedNodes -> view.setData(connectedNodes),
-                        Throwable::printStackTrace);
+        if (graphIndex < 0) {
+            loadingSpinner.setVisibility(View.GONE);
+            view.setData(DebugDataProvider.getDebugData((int) graphIndex));
+
+        } else {
+            disposable = dbHelper.getNodesForGraphObs(graphIndex)
+                    .subscribeOn(Schedulers.computation())
+                    .observeOn(Schedulers.computation())
+                    .map(dataset -> {
+                        List<Long> nodeIds = ListUtils.map(dataset, Node::getId);
+                        List<ForceConnectedNode> connectedNodes = new ArrayList<>();
+                        for (int i = 0; i < dataset.size(); i++) {
+                            Node node = dataset.get(i);
+                            List<Long> neighbourNodeIds = getConnectedNodes(dbHelper, node.getId());
+                            List<Integer> neighbourIndexes = ListUtils.map(neighbourNodeIds, nodeIds::indexOf);
+                            ForceConnectedNode connectedNode = new ForceConnectedNode(i, neighbourIndexes, random.nextFloat() * 100, random.nextFloat() * 100);
+                            connectedNodes.add(connectedNode);
+                        }
+                        return connectedNodes;
+                    })
+                    .subscribeOn(Schedulers.computation())
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .doOnNext(nodes -> loadingSpinner.setVisibility(View.GONE))
+                    .subscribe(connectedNodes -> view.setData(connectedNodes),
+                            Throwable::printStackTrace);
+        }
     }
 
     private static List<Long> getConnectedNodes(DatabaseHelper dbHelper, long nodeId) {
