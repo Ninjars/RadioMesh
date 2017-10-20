@@ -40,7 +40,7 @@ public class Bounds {
     }
 
     public boolean contains(float x, float y) {
-        return left <= x && x < right && top <= y && y < bottom;
+        return left <= x && x <= right && top <= y && y <= bottom;
     }
 
     public RectF asRectF() {

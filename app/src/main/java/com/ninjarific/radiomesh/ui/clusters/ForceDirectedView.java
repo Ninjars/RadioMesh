@@ -142,7 +142,7 @@ public class ForceDirectedView extends View {
             }
         }
         uniqueConnections = new ArrayList<>(connections);
-        nodeBounds.set(Float.MAX_VALUE, Float.MAX_VALUE, Float.MIN_VALUE, Float.MIN_VALUE);
+        nodeBounds.set(Float.MAX_VALUE, Float.MAX_VALUE, -Float.MAX_VALUE, -Float.MAX_VALUE);
         ListUtils.foreach(datasetNodes, node -> updateNodeBounds(node, nodeBounds));
         invalidate();
     }
@@ -172,7 +172,7 @@ public class ForceDirectedView extends View {
             forceCalculator.attractNodes(nodeA, nodeB);
 //            ForceHelper.applyAttractionBetweenNodes(nodeA, nodeB);
         }
-        nodeBounds.set(Float.MAX_VALUE, Float.MAX_VALUE, Float.MIN_VALUE, Float.MIN_VALUE);
+        nodeBounds.set(Float.MAX_VALUE, Float.MAX_VALUE, -Float.MAX_VALUE, -Float.MAX_VALUE);
         for (ForceConnectedNode node : datasetNodes) {
             node.updatePosition(FORCE_FACTOR);
             node.clearForce();

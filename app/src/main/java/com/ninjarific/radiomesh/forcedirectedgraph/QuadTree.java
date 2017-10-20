@@ -1,9 +1,12 @@
 package com.ninjarific.radiomesh.forcedirectedgraph;
 
+import android.support.annotation.Nullable;
+
 import com.ninjarific.radiomesh.utils.Bounds;
 import com.ninjarific.radiomesh.utils.Coordinate;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public class QuadTree<T extends PositionedItem> {
@@ -40,7 +43,7 @@ public class QuadTree<T extends PositionedItem> {
             for (T containedItem : containedItems) {
                 insert(containedItem);
             }
-            containedItems.clear();
+            containedItems = Collections.emptyList();
         }
         boolean added = false;
         for (QuadTree<T> node : subNodes) {
@@ -82,7 +85,9 @@ public class QuadTree<T extends PositionedItem> {
         return bounds;
     }
 
+    @Nullable
     public Coordinate getCenterOfGravity() {
+        if (isEmpty()) return null;
         if (centerOfGravity == null) {
             List<T> allItems = new ArrayList<>(containedItems);
             for (QuadTree<T> tree : subNodes) {
