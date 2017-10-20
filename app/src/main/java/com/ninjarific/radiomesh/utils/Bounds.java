@@ -54,4 +54,9 @@ public class Bounds {
     public double centerY() {
         return top + (getHeight() / 2.0);
     }
+
+    @Override
+    public String toString() {
+        return "<Bounds " + left + ", " + top + " -> " + right + ", " + bottom + ">";
+    }
 }

@@ -123,4 +123,19 @@ public class QuadTree<T extends PositionedItem> {
     public List<T> getContainedItems() {
         return containedItems;
     }
+
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder("QuadTree " + depth + " " + bounds);
+        if (isLeaf()) {
+            sb.append("\n\t>> leaf node: ");
+            sb.append(containedItems.toString());
+        } else {
+            for (QuadTree subNode : subNodes) {
+                sb.append("\n\t>> subNode: \n\t");
+                sb.append(subNode.toString());
+            }
+        }
+        return sb.toString();
+    }
 }

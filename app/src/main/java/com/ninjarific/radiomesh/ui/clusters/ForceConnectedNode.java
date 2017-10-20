@@ -67,4 +67,9 @@ public class ForceConnectedNode implements PositionedItem {
     public QuadTree<ForceConnectedNode> getContainingLeaf() {
         return containingLeaf;
     }
+
+    @Override
+    public String toString() {
+        return "<ForceConnectedNode " + index + " " + x + ", " + y + ">";
+    }
 }
