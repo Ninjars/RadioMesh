@@ -228,12 +228,13 @@ public class ForceDirectedView extends View {
         float scaleFactor = Math.min((float) viewWidth / nodeBounds.width(), (float) viewHeight / nodeBounds.height());
         if (debugDraw) {
             canvas.drawText(String.valueOf(scaleFactor) + " : " +
-                    matrix.toShortString(), 0, viewHeight, debugTextPaint);
+                    nodeBounds.toShortString(), 0, viewHeight, debugTextPaint);
         }
         matrix.reset();
         matrix.setRectToRect(nodeBounds, viewBounds, Matrix.ScaleToFit.CENTER);
         canvas.setMatrix(matrix);
         linePaint.setStrokeWidth(1f / scaleFactor);
+        boundsPaint.setStrokeWidth(1f / scaleFactor);
         if (debugDraw) {
             //            for (ForceConnection node : uniqueRepulsions) {
             //                ForceConnectedNode nodeA = datasetNodes.get(node.from);
