@@ -8,18 +8,20 @@ import timber.log.Timber;
 
 public class NodeForceCalculator {
     private static final double TREE_INEQUALITY = 1.2;
-    private static final double MINIMUM_NODE_DISTANCE = 0.01;
+    private static final double MINIMUM_NODE_DISTANCE = 0.00001;
 
     private final double worldSize;
     private final double forceFactor;
     private final double optimalDistance;
     private final double maxStepDistance;
     private final double maxForce;
+    private final double forceMagnitude;
 
     NodeForceCalculator(double worldSize, double forceFactor, double optimalDistance) {
         this.worldSize = worldSize;
         this.forceFactor = forceFactor;
         this.optimalDistance = optimalDistance;
+        forceMagnitude = forceFactor * optimalDistance * optimalDistance;
         maxStepDistance = optimalDistance / 100.0;
         maxForce = 100;
     }
@@ -31,33 +33,57 @@ public class NodeForceCalculator {
         }
     }
 
+    private void applyRepulsionForce(ForceConnectedNode node, double dx, double dy, double multiplier, double scalingFactor) {
+        double mag = Math.sqrt(dx * dx + dy * dy);
+        if (mag == 0) {
+            return;
+        }
+        double vx = dx / mag;
+        double vy = dy / mag;
+
+        //                double vx = Math.min(1, Math.max(-1, dx / mag));
+        //                double vy = Math.min(1, Math.max(-1, dy / mag));
+        //                dx = dx / worldSize;
+        //                dy = dy / worldSize;
+        double magnitude = -multiplier * scalingFactor;
+        double fx = dx < MINIMUM_NODE_DISTANCE && dx > -MINIMUM_NODE_DISTANCE ? 0 : magnitude / dx;
+        double fy = dy < MINIMUM_NODE_DISTANCE && dy > -MINIMUM_NODE_DISTANCE ? 0 : magnitude / dy;
+
+        //                if (fx > maxForce) {
+        //                    fx = maxForce;
+        //                } else if (fx < -maxForce) {
+        //                    fx = -maxForce;
+        //                }
+        //                if (fy > maxForce) {
+        //                    fy = maxForce;
+        //                } else if (fy < -maxForce) {
+        //                    fy = -maxForce;
+        //                }
+        node.applyForce(vx, vy);
+        Timber.i("applyRepulsionForce " + node.getIndex() + " multiplied by: " + multiplier + "   dx,dy: " + dx + ", " + dy + "   vx,vy: " + vx + ", " + vy + "   fx,fy: " + fx + ", " + fy);
+    }
+
     private void applyTreeForce(QuadTree<ForceConnectedNode> leaf, QuadTree<ForceConnectedNode> tree) {
+        if (tree.isEmpty()) return;
         double distance = quadTreeDistance(leaf, tree);
-        if (leafIsFar(distance, tree)) {
+        if (leaf == tree) {
+            for (ForceConnectedNode nodeA : leaf.getContainedItems()) {
+                for (ForceConnectedNode nodeB : tree.getContainedItems()) {
+                    if (nodeA != nodeB) {
+                        double dx = nodeB.getX() - nodeA.getX();
+                        double dy = nodeB.getY() - nodeA.getY();
+                        applyRepulsionForce(nodeA, dx, dy, 1, forceMagnitude);
+                    }
+                }
+            }
+
+        } else if (leafIsFar(distance, tree) || tree.isLeaf()) {
             // apply repulsive force
             int forceMultiplier = tree.getTotalContainedItemCount();
-            double magnitude = forceMultiplier * forceFactor * optimalDistance * optimalDistance;
-
             for (ForceConnectedNode node : leaf.getContainedItems()) {
                 double dx = getDx(node, tree);
                 double dy = getDy(node, tree);
-//                dx = dx / worldSize;
-//                dy = dy / worldSize;
-                double fx = dx < 0.0001 && dx > 0.0001 ? 0 : magnitude / dx;
-                double fy = dy < 0.0001 && dy > 0.0001 ? 0 : magnitude / dy;
-
-//                if (fx > maxForce) {
-//                    fx = maxForce;
-//                } else if (fx < -maxForce) {
-//                    fx = -maxForce;
-//                }
-//                if (fy > maxForce) {
-//                    fy = maxForce;
-//                } else if (fy < -maxForce) {
-//                    fy = -maxForce;
-//                }
-                node.applyForce(fx, fy);
-                Timber.i("force " + node.getIndex() + " fx, fy " + fx + ", " + fy + " dx,dy " + dx + ", " + dy);
+                applyRepulsionForce(node, dx, dy, forceMultiplier, forceMagnitude);
             }
         } else {
             for (QuadTree<ForceConnectedNode> treeNode : tree.getSubTrees()) {

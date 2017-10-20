@@ -22,7 +22,7 @@ import java.util.List;
 import timber.log.Timber;
 
 public class ForceDirectedView extends View {
-    private static final int MAX_FPS = 40; //desired fps
+    private static final int MAX_FPS = 1; //desired fps
     private static final int FRAME_PERIOD = 1000 / MAX_FPS; // the frame period
     private static final float CIRCLE_RADIUS = 8f;
     private static final double FORCE_FACTOR = 1;
@@ -160,6 +160,7 @@ public class ForceDirectedView extends View {
         Bounds squareBounds = new Bounds(nodeBounds.left, nodeBounds.top, nodeBounds.left + maxDim, nodeBounds.top + maxDim);
         quadTree = new QuadTree<>(0, squareBounds);
         quadTree.insertAll(datasetNodes);
+        Timber.v(quadTree.toString());
 
         for (ForceConnectedNode node : datasetNodes) {
             forceCalculator.repelNode(node, quadTree);
