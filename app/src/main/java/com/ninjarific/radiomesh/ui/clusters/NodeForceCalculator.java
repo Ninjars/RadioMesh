@@ -93,12 +93,12 @@ public class NodeForceCalculator {
 
     private static double getDx(ForceConnectedNode node, QuadTree tree) {
         Coordinate treeCenterOfGravity = tree.getCenterOfGravity();
-        return node.getX() - treeCenterOfGravity.x;
+        return treeCenterOfGravity.x - node.getX();
     }
 
     private static double getDy(ForceConnectedNode node, QuadTree tree) {
         Coordinate treeCenterOfGravity = tree.getCenterOfGravity();
-        return node.getX() - treeCenterOfGravity.y;
+        return treeCenterOfGravity.y - node.getY();
     }
 
     private static double quadTreeDistance(ForceConnectedNode node, QuadTree tree) {
@@ -106,8 +106,8 @@ public class NodeForceCalculator {
         if (treeCenterOfGravity == null) {
             return 0;
         }
-        double dx = node.getX() - treeCenterOfGravity.x;
-        double dy = node.getY() - treeCenterOfGravity.y;
+        double dx = treeCenterOfGravity.x - node.getX();
+        double dy = treeCenterOfGravity.y - node.getY();
         return Math.sqrt(dx * dx + dy * dy);
     }
 
