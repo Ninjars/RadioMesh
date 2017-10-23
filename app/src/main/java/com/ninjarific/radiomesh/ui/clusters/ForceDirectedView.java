@@ -6,6 +6,9 @@ import android.graphics.Color;
 import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.graphics.RectF;
+import android.os.Handler;
+import android.os.HandlerThread;
+import android.os.SystemClock;
 import android.support.annotation.Nullable;
 import android.util.AttributeSet;
 import android.view.View;
@@ -22,10 +25,10 @@ import java.util.List;
 import timber.log.Timber;
 
 public class ForceDirectedView extends View {
-    private static final int MAX_FPS = 1; //desired fps
+    private static final int MAX_FPS = 10; //desired fps
     private static final int FRAME_PERIOD = 1000 / MAX_FPS; // the frame period
     private static final float CIRCLE_RADIUS = 8f;
-    private static final double FORCE_FACTOR = 1;
+    private static final double FORCE_FACTOR = 1000;
     private static final float SCREEN_PADDING_PX = 16;
 
     private static final double NODE_WORLD_SIZE = 10000;
@@ -43,11 +46,14 @@ public class ForceDirectedView extends View {
     private Paint debugTextPaint;
     private List<ForceConnectedNode> datasetNodes = Collections.emptyList();
     private List<ForceConnection> uniqueConnections = Collections.emptyList();
-    private boolean debugDraw = true;
+    private boolean debugDraw = false;
 
     private int viewWidth;
     private int viewHeight;
     private NodeForceCalculator forceCalculator;
+    private HandlerThread handlerThread;
+    private Handler backgroundHandler;
+    private boolean isUpdating;
 
     public ForceDirectedView(Context context) {
         super(context);
@@ -112,7 +118,8 @@ public class ForceDirectedView extends View {
         debugTextPaint.setARGB(100, 30, 250, 30);
         debugTextPaint.setAntiAlias(true);
 
-        forceCalculator = new NodeForceCalculator(NODE_WORLD_SIZE, NODE_FORCE_FACTOR, NODE_OPTIMAL_DISTANCE);
+        forceCalculator = new NodeForceCalculator(NODE_FORCE_FACTOR, NODE_OPTIMAL_DISTANCE);
+
     }
 
     /**
@@ -131,6 +138,7 @@ public class ForceDirectedView extends View {
 
     public void setData(List<ForceConnectedNode> nodes) {
         Timber.i("data: " + nodes);
+        stopUpdateLoop();
         this.datasetNodes = nodes;
         final HashSet<ForceConnection> connections = new HashSet<>(nodes.size());
         for (int i = 0; i < datasetNodes.size(); i++) {
@@ -148,6 +156,22 @@ public class ForceDirectedView extends View {
     }
 
     @Override
+    protected void onAttachedToWindow() {
+        super.onAttachedToWindow();
+        handlerThread = new HandlerThread("HandlerThread");
+        handlerThread.start();
+        backgroundHandler = new Handler(handlerThread.getLooper());
+        startUpdateLoop();
+    }
+
+    @Override
+    protected void onDetachedFromWindow() {
+        stopUpdateLoop();
+        handlerThread.quitSafely();
+        super.onDetachedFromWindow();
+    }
+
+    @Override
     protected void onSizeChanged(int w, int h, int oldw, int oldh) {
         super.onSizeChanged(w, h, oldw, oldh);
         viewWidth = w;
@@ -155,12 +179,11 @@ public class ForceDirectedView extends View {
         viewBounds = new RectF(SCREEN_PADDING_PX, SCREEN_PADDING_PX, w - 2 * SCREEN_PADDING_PX, h - 2 * SCREEN_PADDING_PX);
     }
 
-    private void performStateUpdate() {
+    private void performStateUpdate(double timeDelta) {
         float maxDim = Math.max(nodeBounds.width(), nodeBounds.height());
         Bounds squareBounds = new Bounds(nodeBounds.left, nodeBounds.top, nodeBounds.left + maxDim, nodeBounds.top + maxDim);
         quadTree = new QuadTree<>(0, squareBounds);
         quadTree.insertAll(datasetNodes);
-        Timber.v(quadTree.toString());
 
         for (ForceConnectedNode node : datasetNodes) {
             forceCalculator.repelNode(node, quadTree);
@@ -175,10 +198,45 @@ public class ForceDirectedView extends View {
         }
         nodeBounds.set(Float.MAX_VALUE, Float.MAX_VALUE, -Float.MAX_VALUE, -Float.MAX_VALUE);
         for (ForceConnectedNode node : datasetNodes) {
-            node.updatePosition(FORCE_FACTOR);
+            node.updatePosition(FORCE_FACTOR / timeDelta);
             node.clearForce();
             updateNodeBounds(node, nodeBounds);
         }
+    }
+
+    private void stopUpdateLoop() {
+        if (backgroundHandler != null) {
+            backgroundHandler.removeCallbacksAndMessages(null);
+        }
+    }
+
+    private void startUpdateLoop() {
+        stopUpdateLoop();
+        isUpdating = true;
+        backgroundHandler.post(() -> {
+            while (isUpdating) {
+                long updateTime = SystemClock.uptimeMillis();
+
+                long lastCheck = SystemClock.uptimeMillis();
+                long deltaTime = Math.min(lastCheck - updateTime, 1000);
+                long sleepTime = FRAME_PERIOD - deltaTime;
+                if (sleepTime > 0) {
+                    long currentSleep = 0;
+                    while (currentSleep < sleepTime) {
+                        try {
+                            Thread.sleep(1);
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                        long current = SystemClock.uptimeMillis();
+                        currentSleep += current - lastCheck;
+                        lastCheck = current;
+                    }
+                }
+
+                performStateUpdate(Math.max(SystemClock.uptimeMillis() - updateTime, 500));
+            }
+        });
     }
 
     @Override
@@ -189,38 +247,30 @@ public class ForceDirectedView extends View {
             return;
         }
 
-        long started = System.currentTimeMillis();
-
-        // update state
-        performStateUpdate();
+//        long started = System.currentTimeMillis();
 
         if (canvas != null) {
             // draw
             drawVisualisation(viewWidth, viewHeight, CIRCLE_RADIUS, canvas);
+            invalidate();
         }
 
-        long lastCheck = System.currentTimeMillis();
-        long deltaTime = Math.min(lastCheck - started, 1000);
-        long sleepTime = FRAME_PERIOD - deltaTime;
-        if (sleepTime > 0) {
-            long currentSleep = 0;
-            while (currentSleep < sleepTime) {
-                try {
-                    Thread.sleep(1);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-                long current = System.currentTimeMillis();
-                currentSleep += current - lastCheck;
-                lastCheck = current;
-            }
-        } else if (sleepTime < 0) {
-            while (sleepTime < 0) {
-                performStateUpdate();
-                sleepTime += FRAME_PERIOD;
-            }
-        }
-        invalidate();
+//        long lastCheck = SystemClock.uptimeMillis();
+//        long deltaTime = Math.min(lastCheck - started, 1000);
+//        long sleepTime = FRAME_PERIOD - deltaTime;
+//        if (sleepTime > 0) {
+//            long currentSleep = 0;
+//            while (currentSleep < sleepTime) {
+//                long current = SystemClock.uptimeMillis();
+//                currentSleep += current - lastCheck;
+//                lastCheck = current;
+//            }
+//        } else if (sleepTime < 0) {
+//            while (sleepTime < 0) {
+//                performStateUpdate();
+//                sleepTime += FRAME_PERIOD;
+//            }
+//        }
     }
 
     private void drawVisualisation(int viewWidth, int viewHeight,
